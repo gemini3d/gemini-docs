@@ -35,27 +35,74 @@
 The \textbf{G}eospace \textbf{E}nvironment \textbf{M}odel of \textbf{I}on-\textbf{N}eutral \textbf{I}nteractions (GEMINI) is a general-purpose, three-dimensional (3D) terrestrial ionospheric model capable of describing most processes relevant to the ionosphere at medium to small spatial scales (200 m to 10000 km).  The main source code repository for GEMINI can be found at \url{https://github.com/gemini3d/GEMINI}.  This document describes the formulation of tests used to verify the GEMINI build and functioning.  
 
 
-\section{Diffusion solver test}
+\section{Diffusion solver test problem}
 
-As discussed in the formulation document \url{https://github.com/gemini3d/GEMINI-docs/blob/master/formulation/GEMINI.pdf}, the parabolic portions of the energy equations are solved using implicit finite difference methods (including TRBDF2 and backward Euler).  These are tested via solution of a simple heat equation describing the evolution of temperature $T(x,t)$:
+As discussed in the formulation document \url{https://github.com/gemini3d/GEMINI-docs/blob/master/formulation/GEMINI.pdf}, the parabolic portions of the energy equations are solved using implicit finite difference methods (including TRBDF2 and backward Euler).  These are tested via solution of a simple heat equation describing the evolution of temperature $T(z,t)$ in space and time subject to uniform thermal conduction:
 \begin{equation}
-\frac{\partial T}{\partial t} - \lambda \frac{\partial^2 T}{\partial x^2} = 0.
+\frac{\partial T}{\partial t} - \lambda \frac{\partial^2 T}{\partial z^2} = 0.
 \end{equation}
-For purposes of testing we solve this equation on the \emph{bounded} domain $0 \le x \le 1$.  Invoking separation of variables we presume $T(x,t)=X(x) \mathcal{T}(t)$ and substitute back into the original equation:  
+For purposes of testing we solve this equation on the \emph{bounded} domain $0 \le x \le 1$.  Invoking separation of variables we presume $T(z,t)=Z(z) \mathcal{T}(t)$ and substitute back into the original equation:  
 \begin{equation}
-\frac{1}{\lambda \mathcal{T}} \frac{\partial \mathcal{T}}{\partial t} - \frac{1}{X} \frac{\partial^2 X}{\partial x^2} = 0.
+\frac{1}{\lambda \mathcal{T}} \frac{\partial \mathcal{T}}{\partial t} - \frac{1}{Z} \frac{\partial^2 Z}{\partial z^2} = 0.
 \end{equation}
 Each term depends solely on one of the independent variables $x,t$, which implies that for this relation to be valid for all $x,t$ then each term must be equal to a constant.  
 \begin{eqnarray}
--\frac{1}{\lambda \mathcal{T}} \frac{d \mathcal{T}}{d t} &=& k^2 \\
-\frac{1}{X} \frac{d^2 X}{d x^2} &=& -k^2.
+\frac{1}{\lambda \mathcal{T}} \frac{d \mathcal{T}}{d t} &=& -k^2 \\
+- \frac{1}{Z} \frac{d^2 Z}{d z^2} &=& k^2.
 \end{eqnarray}
-Note also that since we have dependence on only one variable that we may convert the derivatives into \emph{ordinary} derivatives.
+Note also that since we have dependence on only one variable that we have converted the derivatives into \emph{ordinary} derivatives.  The solutions to these ODEs read:
+\begin{eqnarray}
+\mathcal{T}(t) &=& A e^{-k^2 \lambda t} \\
+Z(z) &=& A' \sin kz + B' \cos kz
+\end{eqnarray}
+The elemental solution ($k$ arbitrary) is given by: 
+\begin{equation}
+\tilde{T}(z,t)=Z(z) \mathcal{T}(t) = e^{-k^2 \lambda t} \left( A'' \sin kz + B'' \cos kz \right)
+\end{equation}
+
+Further progress toward a general solution requires specific initial and boundary conditions.  For our test problem we assume that the temperature goes to zero on the boundaries ($z \in \{0,1\}$).  Let us also assume that the initial temperature of the system is given by:  $T(z,0) = f(z)$.  First employing the condition $T(0,t)=0$, we find that $B''=0$.  The other boundary condition $T(1,t)=0$ sets restrictions on the argument/eigenvalues of the sine function, namely that $k=n \pi, n \in \mathbb{Z}^+$ is a set of roots for the sine function.  The elemental solution is then:
+\begin{equation}
+\tilde{T}_n(z,t)= A_n e^{-n^2 \pi^2 \lambda t} \sin \left( n \pi z \right)
+\end{equation}
+Any integer value chosen for $n$ results in a legitimate solution for the original partial differential equation; therefore, the general solution is a linear superposition of all such solutions.  
+\begin{equation}
+T(z,t)= \sum_{n=1}^{\infty} A_n ~ e^{-n^2 \pi^2 \lambda t} \sin \left( n \pi z \right).
+\end{equation}
+The initial condition can now be applied to solve for the coefficients $A_n$ by leveraging orthogonality of the sine functions.  That is by making use of the fact that:
+\begin{equation}
+\left< \sin(n \pi z) | \sin (n' \pi z) \right> = \int_0^1 \sin(n \pi z) \sin (n' \pi z) dz = \frac{1}{2} \delta_{nn'},
+\end{equation}
+we may produce a solution for $A_n$ from the series solution.  The initial condition is represented in summation form (a Fourer sine series) as:  
+\begin{equation}
+T(z,0) = f(z) = \sum_{n=1}^{\infty} A_n ~ \sin \left( n \pi z \right).
+\end{equation}
+Taking the scalar product of both sides with $\sin (n' \pi z)$ gives:
+\begin{equation}
+\left< f(z) | \sin (n' \pi z) \right> = \sum_{n=1}^{\infty} A_n ~ \left< \sin(n \pi z) | \sin (n' \pi z) \right> = \sum_n = \frac{A_n}{2} \delta_{nn'} = \frac{A_{n'}}{2}
+\end{equation}
+Thus the coefficients are:  
+\begin{equation}
+A_{n'} = 2 \left< f(z) | \sin (n' \pi z) \right> = 2 \int_0^1 f(z) \sin (n' \pi z) dz
+\end{equation}
+
+For purposes of testing it is easiest to pick a test problem with boundary conditions that are represented by a finite sum - one way this can be accomplished is by choosing a boundary condition that is an eigenfunction for this particular problem, say:
+\begin{equation}
+ f(z) = \sin(2 \pi z).
+\end{equation}
+From this, and orthogonality of the sine function it follows that:
+\begin{equation}
+A_{n'} = \left\{ \begin{array}{cc} 0 & n \ne 2 \\ 1 & n=2  \end{array} \right. ,
+\end{equation}
+and that the general solution for this specific set of boundary and initial conditions is:  
+\begin{equation}
+T(z,t) = e^{-4 \pi^2 \lambda t} \sin \left( 2 \pi z \right)
+\end{equation}
+
 
 
 \section{Error reporting}
 
-Please create an issue on our GitHub website \url{https://github.com/gemini3d/}
+Please create an issue on our GitHub website \url{https://github.com/gemini3d/} if you find an error in our documentation or codes.  
 
 
 \section{Contributors}
