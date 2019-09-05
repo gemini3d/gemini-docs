@@ -100,6 +100,43 @@ T(z,t) = e^{-4 \pi^2 \lambda t} \sin \left( 2 \pi z \right)
 
 
 
+\section{Potential solver test problem}
+
+The elliptic potential solver is tested using a simplified 2D test problem, Laplace's equation:
+\begin{equation}
+\frac{\partial^2 \Phi}{\partial x^2} + \frac{\partial^2 \Phi}{\partial y^2} = 0, 
+\end{equation}
+on the domain $0 \le x \le 1, 0 \le y \le 1$ with the boundary conditions $\Phi(x,0)-=\Phi(0,y)=\Phi(1,y)=0, \Phi(x,1)=f(x)$.  Exploying separation of variables $\Phi(x,y)=X(x)Y(y)$ we find the ODE solutions for $X(x)$ and $Y(y)$ to be:
+\begin{eqnarray}
+X(x) &=& A \sin kx + B \cos kx \\
+Y(y) &=& A' \sinh ky + B' \cosh ky
+\end{eqnarray}
+The boundary conditions dictate the following constraints:  $\Phi(0,y)=0 \implies B=0, \Phi(x,0) \implies B'=0, \Phi(1,y)=0 \implies k=n \pi$.  Thus we have the general solution:
+\begin{equation}
+\Phi(x,y) = \sum_n A_n \sinh (n \pi y) \sin (n \pi x)
+\end{equation}
+Again choosing our boundary conditions for this test problem so that only one term in the series survives we may choose:
+\begin{equation}
+f(x) = \sin(2 \pi x).
+\end{equation}
+Which gives:
+\begin{equation}
+f(x) = \sum_n A_n \sinh (n \pi) \sin (n \pi x),
+\end{equation}
+for the potential evaluated at the non-grounded boundary.  By orthogonality the coefficients are:  
+\begin{equation}
+A_n = \frac{2}{\sinh (n \pi)} \left< f(x) | \sin (n \pi x) \right>; 
+\end{equation}
+however the only nonzero coefficient occurs for $n=2$:
+\begin{equation}
+A_2 = \frac{2}{\sinh (2 \pi)} \left< \sin(2 \pi x) | \sin (2 \pi x) \right> = \frac{1}{\sinh(2 \pi)}; 
+\end{equation}
+The solution for this set of boundary conditions is, thus: 
+\begin{equation}
+\Phi(x,y) = \frac{\sinh (2 \pi y)}{\sinh(2 \pi)} \sin (2 \pi x)
+\end{equation}
+
+
 \section{Error reporting}
 
 Please create an issue on our GitHub website \url{https://github.com/gemini3d/} if you find an error in our documentation or codes.  
