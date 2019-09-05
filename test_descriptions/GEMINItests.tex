@@ -32,7 +32,25 @@
 
 \section{Purpose of this document}
 
-The \textbf{G}eospace \textbf{E}nvironment \textbf{M}odel of \textbf{I}on-\textbf{N}eutral \textbf{I}nteractions (GEMINI) is a general-purpose, three-dimensional (3D) terrestrial ionospheric model capable of describing most processes relevant to the ionosphere at medium to small spatial scales (200 m to 10000 km).  This document describes the formulation of tests used to verify the GEMINI build and functioning.  
+The \textbf{G}eospace \textbf{E}nvironment \textbf{M}odel of \textbf{I}on-\textbf{N}eutral \textbf{I}nteractions (GEMINI) is a general-purpose, three-dimensional (3D) terrestrial ionospheric model capable of describing most processes relevant to the ionosphere at medium to small spatial scales (200 m to 10000 km).  The main source code repository for GEMINI can be found at \url{https://github.com/gemini3d/GEMINI}.  This document describes the formulation of tests used to verify the GEMINI build and functioning.  
+
+
+\section{Diffusion solver test}
+
+As discussed in the formulation document \url{https://github.com/gemini3d/GEMINI-docs/blob/master/formulation/GEMINI.pdf}, the parabolic portions of the energy equations are solved using implicit finite difference methods (including TRBDF2 and backward Euler).  These are tested via solution of a simple heat equation describing the evolution of temperature $T(x,t)$:
+\begin{equation}
+\frac{\partial T}{\partial t} - \lambda \frac{\partial^2 T}{\partial x^2} = 0.
+\end{equation}
+For purposes of testing we solve this equation on the \emph{bounded} domain $0 \le x \le 1$.  Invoking separation of variables we presume $T(x,t)=X(x) \mathcal{T}(t)$ and substitute back into the original equation:  
+\begin{equation}
+\frac{1}{\lambda \mathcal{T}} \frac{\partial \mathcal{T}}{\partial t} - \frac{1}{X} \frac{\partial^2 X}{\partial x^2} = 0.
+\end{equation}
+Each term depends solely on one of the independent variables $x,t$, which implies that for this relation to be valid for all $x,t$ then each term must be equal to a constant.  
+\begin{eqnarray}
+-\frac{1}{\lambda \mathcal{T}} \frac{d \mathcal{T}}{d t} &=& k^2 \\
+\frac{1}{X} \frac{d^2 X}{d x^2} &=& -k^2.
+\end{eqnarray}
+Note also that since we have dependence on only one variable that we may convert the derivatives into \emph{ordinary} derivatives.
 
 
 \section{Error reporting}
