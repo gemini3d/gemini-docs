@@ -98,6 +98,7 @@ and that the general solution for this specific set of boundary and initial cond
 T(z,t) = e^{-4 \pi^2 \lambda t} \sin \left( 2 \pi z \right)
 \end{equation}
 
+Energy diffusion in GEMINI is only performed in the field-aligned direction.  Thus, for a 3D system we are effectively just executing a sequence of 1D diffusion equations.  
 
 
 \section{Potential solver test problem}
@@ -134,6 +135,56 @@ A_2 = \frac{2}{\sinh (2 \pi)} \left< \sin(2 \pi x) | \sin (2 \pi x) \right> = \f
 The solution for this set of boundary conditions is, thus: 
 \begin{equation}
 \Phi(x,y) = \frac{\sinh (2 \pi y)}{\sinh(2 \pi)} \sin (2 \pi x)
+\end{equation}
+
+All potential solutions currently in GEMINI are two-dimensional so this particular test problem is representative of each.  
+
+
+\section{Advection solver test problem}
+
+The advection solver in GEMINI deals with problems of the form:
+\begin{equation}
+\frac{\partial \rho}{\partial t} + \frac{\partial}{\partial z} \left( \rho v \right) = 0,  
+\end{equation}
+and higher dimensional equivalents (implemented through directional splitting).  For constant velocity (assumed to be given) a simpler equation, which can be solved analytically, results.  
+\begin{equation}
+\frac{\partial \rho}{\partial t} + v \frac{\partial \rho}{\partial z} = 0,  
+\end{equation}
+This equation can be seen to be equivalent to the wave equation by differentiating with respect to time and space respectively giving:  
+\begin{eqnarray}
+\frac{\partial^2 \rho}{\partial t^2} + v \frac{\partial^2 \rho}{\partial t \partial z} &=& 0 \\
+\frac{\partial^2 \rho}{\partial z \partial t} + v \frac{\partial^2 \rho}{\partial z^2} &=& 0
+\end{eqnarray}
+Eliminating the cross partial derivatives from these equations gives the familiar wave equation.  
+\begin{equation}
+\frac{\partial^2 \rho}{\partial t^2} - v^2 \frac{\partial^2 \rho}{\partial z^2} = 0,  
+\end{equation}
+The solution to this particular equation is a wave of the form:
+\begin{equation}
+\rho(z,t)=f(z-vt),
+\end{equation}
+where the function $f$ is arbitrary, generally speaking, but dictated by the specific initial conditions of the problem of interest.  This solution can be verified by direct substitution, or derived by separation of variables - analogous to the test problems above.  For an initial condition given by:
+\begin{equation}
+\rho(z,0)=e^{-\frac{z^2}{2 \sigma_z^2}}
+\end{equation}
+The solution at later times is:
+\begin{equation}
+\rho(z,t)=e^{-\frac{(z-vt)^2}{2 \sigma_z^2}}
+\end{equation}
+For testing purposes it is useful to numerical solve this on a periodic domain, e.g. $0 \le x \le 1$.
+
+GEMINI advects mass, momentum, and energy in all three dimensions, representative of the equation:  
+\begin{eqnarray}
+\frac{\partial \rho}{\partial t} + v_x \frac{\partial \rho}{\partial x} + v_y \frac{\partial \rho}{\partial y} + v_z \frac{\partial \rho}{\partial z} &=& 0 %\\  
+%\frac{\partial \rho}{\partial t} + \mathbf{v} \cdot \nabla \rho &=& 0 \\  
+\end{eqnarray}
+For initial conditions given by:
+\begin{equation}
+\rho(z,0)=e^{-\frac{x^2}{2 \sigma_x^2}}e^{-\frac{y^2}{2 \sigma_y^2}}e^{-\frac{z^2}{2 \sigma_z^2}}
+\end{equation}
+the solution at later time is:
+\begin{equation}
+\rho(z,t)=e^{-\frac{(x-v_x t)^2}{2 \sigma_x^2}}e^{-\frac{(y - v_y t)^2}{2 \sigma_y^2}}e^{-\frac{(z-v_z t)^2}{2 \sigma_z^2}}
 \end{equation}
 
 
