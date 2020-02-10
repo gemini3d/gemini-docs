@@ -1,0 +1,71 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{natbib}
+\usepackage{fullpage}
+\usepackage{lineno}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{sidecap}
+\usepackage{hyperref}
+
+\begin{document}
+
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{0.4cm}
+
+\bibliographystyle{apalike}
+
+%\modulolinenumbers[5]
+%\linenumbers
+
+\title{A Summary of Some of the Elliptic Equations Used in GEMINI}
+\author{Matthew D. Zettergren, PhD\\ Associate Professor of Engineering Physics\\ Center for Space and Atmospheric Physics\\ Physical Sciences Department \\Embry-Riddle Aeronautical University\\mattzett@gmail.com\\zettergm@erau.edu}
+\maketitle
+
+\tableofcontents
+
+\pagebreak
+
+
+\section{Coordinate form, general ortho, static, EFL} \label{sec:main}
+
+The most common description of electrodynamics used in GEMINI is an equipotential field line (EFL) quasistatic equation:  
+\begin{eqnarray}
+&~& \frac{\partial}{\partial x_2} \left( \Sigma_P^{(2)} \frac{\partial \Phi}{\partial x_2} \right) + \frac{\partial}{\partial x_3} \left( \Sigma_P^{(3)} \frac{\partial \Phi}{\partial x_3} \right) -  \frac{\partial \Sigma_H'}{\partial x_2} \frac{\partial \Phi}{\partial x_3} + \frac{\partial \Sigma_H'}{\partial x_3} \frac{\partial \Phi}{\partial x_2} \nonumber \\ &=& \int h_1 h_2 h_3 \left\{ \nabla_\perp \cdot \left[ \boldsymbol{\sigma}_\perp \cdot \left( \mathbf{v}_{n\perp} \times \mathbf{B} \right) \right] + + \nabla_\perp \cdot \left( \boldsymbol{\sigma}_\perp \cdot \mathbf{E}_{0\perp} \right) \right\} d x_1 + \left[ h_2 h_3 J_1 \right] \left|^{x_{1,max}}_{x_{1,min}} \right. . \label{eqn:curvpotEFL}
+\end{eqnarray}
+The coefficients of this equation have the functional dependencies:  $\Sigma_P^{(2,3)}(x_2,x_3)$, $\Sigma_H'(x_2,x_3)$, and the right-hand side of Equation \ref{eqn:curvpotEFL} is an inhomogeneous term that can be computed from an atmosphere with a known state (in our case from MAGIC).  
+
+The quasistatic equation must be evaluated multiple times (by default every time step - but this is likely a bit overkill) as the simulation progresses since atmospheric forcing will cause variations of the conductances ($\Sigma$ terms) with time.  These variations are slow compared to other electrodynamic processes such that they can be considered effectively fixed (wrt time) during a single time step.
+
+Equation \ref{eqn:curvpotEFL} can be used even for many 3D systems due to strong mapping of electric fields along highly conducting geomagnetic field lines.  Nonetheless it does begin to break down at very small scales as discussed by Farley et al.  
+
+
+\section{Coordinate form, general ortho, static, non-EFL}
+
+A fully resolved equation (i.e. along geomagnetic field lines) may be needed in cases where the scale sizes are small.  This situation is currently only solved in GEMINI in 2D as it has been found to be extraordinarily computational expensive in 3D (to the point of being totally infeasible with MUMPS, umfpack, and other direct solvers).  This equation reads:  
+\begin{eqnarray}
+\frac{1}{h_1 h_2 h_3} \left[ \frac{\partial}{\partial x_1} \left( \frac{h_2 h_3}{h_1} \sigma_0 \frac{\partial \Phi}{\partial x_1} \right) + \frac{\partial}{\partial x_2} \left( \frac{h_1 h_3}{h_2} \sigma_P \frac{\partial \Phi}{\partial x_2} \right) -  \right. \frac{\partial}{\partial x_2} \left( h_1 \sigma_H \right) \frac{\partial \Phi}{\partial x_3} &+& \nonumber \\ \left. \frac{\partial}{\partial x_3} \left( h_1 \sigma_H \right) \frac{\partial \Phi}{\partial x_2} + \frac{\partial}{\partial x_3} \left( \frac{h_1 h_2}{h_3} \sigma_P \frac{\partial \Phi}{\partial x_3} \right)
+\right]  = \nabla_\perp \cdot \left( \sum_s n_s m_s \nu_s \boldsymbol{\mu}_{s\perp} \cdot \mathbf{v}_{n\perp} \right) + \nabla_\perp \cdot \left( \boldsymbol{\sigma}_\perp \cdot \mathbf{E}_{0\perp} \right) \label{eqn:curvpot}
+\end{eqnarray}
+For 2D solves (the only type found feasible so far) all $x_3$ derivatives are taken to be zero.  All coefficients in the general 3D case depend on all three coordinates $x_1,x_2,x_3$ and the equation is treated as quasistatic as described in Section \ref{sec:main}.  The right-hand side of this equation is effectively known - i.e. specified from user or other model input.  
+
+
+\section{Coordinate form, Cartesian, dynamic}
+
+In cases where extremely high resolution is needed, higher-order quasistatic corrections are required as described in Kintner and Seyler, (1985).  In Cartesian coordinates $(x_1,x_2,x_3)=(z,x,y)$ this equation is:  
+\begin{eqnarray}
+\frac{\partial}{\partial x_2} \left( \Sigma_P \frac{\partial \Phi}{\partial x_2} \right) + \frac{\partial}{\partial x_3} \left( \Sigma_P \frac{\partial \Phi}{\partial x_3} \right) -  \frac{\partial \Sigma_H}{\partial x_2} \frac{\partial \Phi}{\partial x_3} + \frac{\partial \Sigma_H}{\partial x_3} \frac{\partial \Phi}{\partial x_2} &+& \nonumber \\ 
+\left\{ \frac{\partial}{\partial x_2} \left[ C_M \frac{\partial}{\partial t} \left( \frac{\partial \Phi}{\partial x_2} \right) \right] + \frac{\partial}{\partial x_3} \left[ C_M \frac{\partial}{\partial t} \left( \frac{\partial \Phi}{\partial x_3} \right) \right] \right\} &+& \nonumber \\
+\frac{\partial}{\partial x_2} \left( C_M v_2 \frac{\partial^2 \Phi}{\partial x_2^2} + C_M v_3 \frac{\partial^2 \Phi}{\partial x_3 \partial x_2} \right) &+& \nonumber \\
+\frac{\partial}{\partial x_3} \left( C_M v_2 \frac{\partial^2 \Phi}{\partial x_2 \partial x_3} + C_M v_3 \frac{\partial^2 \Phi}{\partial x_3^2} \right) &=& \nonumber \\
+= \int \left\{ \nabla_\perp \cdot \left[ \boldsymbol{\sigma}_\perp \cdot \left( \mathbf{v}_{n\perp} \times \mathbf{B} \right) \right] + + \nabla_\perp \cdot \left( \boldsymbol{\Sigma}_\perp \cdot \mathbf{E}_{0\perp} \right) \right\} d x_1 + \left[J_1 \right] \left|^{x_{1,max}}_{x_{1,min}} \right. , \label{eqn:electrodynamic}
+\end{eqnarray}
+where the coefficients only depend on $x_2,x_3$ and the right-hand side terms are computed from given user or model input.  
+
+Equation \ref{eqn:electrodynamic} is mixed-type and is currently just solved with Backward Euler time stepping (!).  Higher order in time solutions are very expensive and it is not clear that they are necessary for many problems where the capacitance (coefficient for the non-elliptic terms) is fairly small, but this really should be examined more systematically.  Truthfully, few people bother with this level of physical detail in the ionosphere so it is a bit of an underexplored aspect.  
+
+
+\end{document}
