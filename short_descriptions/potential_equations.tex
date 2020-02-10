@@ -29,8 +29,9 @@
 
 \pagebreak
 
+This document briefly outlines the electrodynamics equations solved in GEMINI - This information is a summary for conveniences and is not intended to replace the full description in the main documentation.  
 
-\section{Coordinate form, general ortho, static, EFL} \label{sec:main}
+\section{General ortho, static, EFL} \label{sec:main}
 
 The most common description of electrodynamics used in GEMINI is an equipotential field line (EFL) quasistatic equation:  
 \begin{eqnarray}
@@ -43,7 +44,7 @@ The quasistatic equation must be evaluated multiple times (by default every time
 Equation \ref{eqn:curvpotEFL} can be used even for many 3D systems due to strong mapping of electric fields along highly conducting geomagnetic field lines.  Nonetheless it does begin to break down at very small scales as discussed by Farley et al.  
 
 
-\section{Coordinate form, general ortho, static, non-EFL}
+\section{General ortho, static, non-EFL}
 
 A fully resolved equation (i.e. along geomagnetic field lines) may be needed in cases where the scale sizes are small.  This situation is currently only solved in GEMINI in 2D as it has been found to be extraordinarily computational expensive in 3D (to the point of being totally infeasible with MUMPS, umfpack, and other direct solvers).  This equation reads:  
 \begin{eqnarray}
@@ -53,7 +54,7 @@ A fully resolved equation (i.e. along geomagnetic field lines) may be needed in 
 For 2D solves (the only type found feasible so far) all $x_3$ derivatives are taken to be zero.  All coefficients in the general 3D case depend on all three coordinates $x_1,x_2,x_3$ and the equation is treated as quasistatic as described in Section \ref{sec:main}.  The right-hand side of this equation is effectively known - i.e. specified from user or other model input.  
 
 
-\section{Coordinate form, Cartesian, dynamic}
+\section{Cartesian, EFL, dynamic}
 
 In cases where extremely high resolution is needed, higher-order quasistatic corrections are required as described in Kintner and Seyler, (1985).  In Cartesian coordinates $(x_1,x_2,x_3)=(z,x,y)$ this equation is:  
 \begin{eqnarray}
