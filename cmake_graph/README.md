@@ -13,7 +13,7 @@ pip install -e cmakeutils
 python -m cmakeutils.graph ~/gemini/gfx
 ```
 
-We present a snapshot of these SVG files in this directory.
+We present a snapshot of these SVG files in [gfx/](./gfx) directory.
 SVG files are vector graphics that display in modern web browsers--PNGs are rasterized and hence of finite resolution.
 These must be manually generated.
 The dependency graph varies depending on which Gemini3D program options are enabled.
