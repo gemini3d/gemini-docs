@@ -564,27 +564,29 @@ where $\mathbf{R} \equiv \mathbf{x}-\mathbf{x'} = \sum_i R_i \hat{\mathbf{e}}_i$
 
 \section{Dipole coordinates}
 
-The most commonly used \emph{curvilinear} coordinate system for GEMINI is a dipole coordinate system \citep{Huba:2000}.  For purposes of illustrating how one might set up an arbitrary orthogonal curvilinear system for GEMINI we present and end-to-end derivation of the dipole metric and associated basis vectors here.  A similar procedure may be used to fully characterize any other curvilinear system that is orthogonal.  
+The most commonly used \emph{curvilinear} coordinate system for GEMINI is a dipole coordinate system, defined in \citep{Huba:2000}.  Here we outline metric factors and unit vectors used by GEMINI to describe this coordinate system.  Throughout this section we use $x^i$ to refer to a general curvilinear coordinate (contravariant), and subscripts are used to denote covariant quantities.  The purpose of laying out the transformation process in such detail is to provide a succinct description of how these may be derived for ``new'' coordinate systems.  
 
 
-\subsection{Derivation of metric for dipole coordinates}
+\subsection{Derivation of dipole metric}
 
-The definitions for dipole coordinates used in GEMINI are (switching to superscripts to denote contravariant vs. covariant):  
+Curvilinear dipole coordinates are typically described using quantities $q,p,\phi$, related to our general curvilinear coordinates by:  
 \begin{equation}
 x^1 = q; \quad x^2 = p; \quad x^3 = \phi
 \end{equation}
-with the $q,p,\phi$ coordinates defined as in \citet{Huba:2000}, and $\phi$ being the same coordinate as used in a spherical system.  In terms of spherical coordinates (measured from the center of Earth's tilted dipole) and Cartesian coordinates:  
+The $q,p,\phi$ coordinates defined as in \citet{Huba:2000}; $q$ is a coordinate along the geomagnetic field, $p$ is a coordinate perpendicular to the field in the magnetic meridional plane, and $\phi$ is same coordinate as used in a spherical system (positive toward magnetic east).  In terms of spherical coordinates $r,\theta,\phi$ (measured from the center of Earth's tilted dipole, which axes aligned according to Earth magnetic dipole moment) and Cartesian coordinates (similarly defined) the dipole coordinates are:  
 \begin{eqnarray}
 q &=& \frac{R_e^2}{r^2} \cos \theta = \frac{R_e^2 z}{\left( x^2+y^2+z^2\right)^{3/2}}\\
 p &=& \frac{r}{R_e} \frac{1}{\sin^2 \theta} = \frac{\left( x^2+y^2+z^2\right)^{3/2}}{R_e \left( x^2 + y^2 \right) } \\
 \phi &=& \tan^{-1} \left( \frac{y}{x} \right)
 \end{eqnarray}
-Inverting $q,p$ coordinates to obtain $r,\theta$ is accomplished by solving the relations:
+Inverting $q,p$ coordinates to obtain $r,\theta$ is accomplished via the relations:
 \begin{eqnarray}
 q^2 \left( \frac{r}{R_e}\right)^4 + \frac{1}{p} \left( \frac{r}{R_e}\right)  &=& 1 \\
 \cos \theta &=& q \frac{r^2}{R_e^2}
 \end{eqnarray}
-From these transformations, the basis vectors and metric for dipole coordinates can be derived.  The contravariant basis vectors are defined in terms of contravariant differentials $d x^i$ as:
+Typically the first equation in this set is solved for $r$ given $q,p$ (a numerical root-finding problem), and then the $r$- and $q$ coordinates are using to evaluate the latter equation for $\theta$.  
+
+Transformations defined above allow for the basis vectors and metric for dipole coordinates to be derived.  Contravariant basis vectors are defined in terms of coordinates as \citep[][ Chapter 4]{Arfken7th}:
 \begin{equation}
 \boldsymbol{\varepsilon}^i = \frac{\partial x^i}{\partial x} \hat{\mathbf{e}}_x + \frac{\partial x^i}{\partial y} \hat{\mathbf{e}}_y + \frac{\partial x^i}{\partial z} \hat{\mathbf{e}}_z \label{eqn:conbasis}
 \end{equation}
@@ -592,7 +594,7 @@ The covariant basis vectors (not used immediately) are defined by:
 \begin{equation}
 \boldsymbol{\varepsilon}_i = \frac{\partial x}{\partial x^i} \hat{\mathbf{e}}_x + \frac{\partial y}{\partial x^i} \hat{\mathbf{e}}_y + \frac{\partial z}{\partial x^i} \hat{\mathbf{e}}_z \label{eqn:conbasis}
 \end{equation}
-The necessary derivative for computing the contravariant basis be computed from the dipole coordinates as functions of the cartesian coordinates $x,y,z$ (listed above) and are given by:  
+The necessary derivative for computing the contravariant basis vectors can be computed from the dipole coordinates as functions of the cartesian coordinates $x,y,z$ (listed above) and giving:  
 \begin{eqnarray}
 \frac{\partial x^1}{\partial x} &=& \frac{\partial q}{\partial x} = \frac{-3 R_e \sin \theta \cos \theta \cos \phi}{r^3} \\
 \frac{\partial x^1}{\partial y} &=& \frac{\partial q}{\partial y} = \frac{-3 R_e \sin \theta \cos \theta \sin \phi}{r^3} \\
@@ -604,18 +606,18 @@ The necessary derivative for computing the contravariant basis be computed from 
 \frac{\partial x^3}{\partial y} &=& \frac{\partial \phi}{\partial y} = \frac{\cos \phi}{r \sin \theta} \\
 \frac{\partial x^3}{\partial z} &=& \frac{\partial \phi}{\partial z} = 0
 \end{eqnarray}
-The contravariant basis vectors are, therefore, from Equation \ref{eqn:conbasis}:
+The contravariant basis vectors are (from Equation \ref{eqn:conbasis}):
 \begin{eqnarray}
 \boldsymbol{\varepsilon}^1 &=& \frac{-3 R_e \sin \theta \cos \theta \cos \phi}{r^3} \hat{\mathbf{e}}_x + \frac{-3 R_e \sin \theta \cos \theta \sin \phi}{r^3} \hat{\mathbf{e}}_y + \frac{R_e^2 \left( 1 - 3 \cos^2 \theta \right)}{r^3} \hat{\mathbf{e}}_z \\
 \boldsymbol{\varepsilon}^2 &=& \frac{\cos \phi}{ R_e \sin^3 \theta} \left( 1 - 3 \cos^2 \theta \right) \hat{\mathbf{e}}_x +  \frac{\sin \phi}{ R_e \sin^3 \theta} \left( 1 - 3 \cos^2 \theta \right) \hat{\mathbf{e}}_y + \frac{3 \cos \theta}{R_e \sin^2 \theta} \hat{\mathbf{e}}_z \\
 \boldsymbol{\varepsilon}^3 &=& \frac{- \sin \phi}{r \sin \theta} \hat{\mathbf{e}}_x + \frac{\cos \phi}{r \sin \theta} \hat{\mathbf{e}}_y
 \end{eqnarray}
 
-The metric tensors corresponding to our dipole curvilinear space are related to differential displacements in the new coordinate system.  Based on the definition of the covariant unit vectors a differential displacement in a curvilinear system is:
+The metric tensors corresponding to our dipole curvilinear space are related to differential displacements in the new coordinate system.  Based on the definition of the covariant unit vectors a differential displacement in a curvilinear system is (note use of Einstein's summation convention):
 \begin{equation}
 d \mathbf{r} = d x^i \boldsymbol{\varepsilon}_i \label{eqn:dr}
 \end{equation}
-Differential distance squared, is then:
+Differential distance squared may then be written:
 \begin{equation}
 dr^2 \equiv d \mathbf{r} \cdot d \mathbf{r} = \left(d x^i \boldsymbol{\varepsilon}_i \right) \cdot \left( d x^j \boldsymbol{\varepsilon}_j \right) = \left( \boldsymbol{\varepsilon}_i \cdot \boldsymbol{\varepsilon}_j \right) dx^i dx^j = g_{ij} dx^i dx^j,
 \end{equation}
@@ -623,18 +625,18 @@ where
 \begin{equation}
 g_{ij} \equiv \boldsymbol{\varepsilon}_i \cdot \boldsymbol{\varepsilon}_j
 \end{equation}
-is defined as the covariant metric.  By analogy we can define a contravariant metric:
+is defined as the covariant metric \citep{Arfken7th}.  The contravariant metric is:
 \begin{equation}
 g^{ij} \equiv \boldsymbol{\varepsilon}^i \cdot \boldsymbol{\varepsilon}^j
 \end{equation}
-Note that, as a consequence of the chain rule applied to sequences of derivatives from the basis vectors, the following relations hold:
+Note that, as a consequence of the chain rule applied to sequences of derivatives from the basis vectors, the following relations hold \citep{Arfken7th}:
 \begin{equation}
 \boldsymbol{\varepsilon}_i \cdot \boldsymbol{\varepsilon}^j = \delta_i^j
 \end{equation}
 \begin{equation}
 g_{ik} g^{kj} = \delta_i^j
 \end{equation}
-From the latter expression we see that the covariant and contravariant metrics can be understood as matrix inverses of each other.  One may convert from covariant to contravariant bases by using these two metrics:
+Covariant and contravariant metrics can thus be related via a matrix inverse operation.  One may convert from covariant to contravariant bases by using these two metric tensors:
 \begin{equation}
 \boldsymbol{\varepsilon}_j = g_{ji} \boldsymbol{\varepsilon}^i
 \end{equation}
@@ -659,11 +661,7 @@ g^{ij} \rightarrow \left[
 \end{array}
 \right] 
 \end{eqnarray}
-This is related to the covariant metric $g_{ij}$ via the relation:
-\begin{equation}
-g_{ik} g^{kj} = \delta_i^j
-\end{equation}
-Thus the covariant metric is the inverse of the contravariant metric:
+The covariant metric is therefore represented by:
 \begin{eqnarray}
 g_{ij} \rightarrow \left[
 \begin{array}{ccc}
@@ -673,18 +671,18 @@ g_{ij} \rightarrow \left[
 \end{array}
 \right] 
 \end{eqnarray}
-The metric factors, $h_i$, (needed for derivatives and intergrals) are defined by (no summation):
+The metric factors, $h_i$, which we require for computing various derivatives and intergrals in GEMINI are defined by (no summation):
 \begin{equation}
 h_i \equiv \sqrt{g_{ii}}
 \end{equation}
-For the dipole system, applying this definition gives:  
+For our specific dipole system we have:  
 \begin{eqnarray}
 h_1 = h_q &=& \frac{r^3}{R_e^2} \frac{1}{\sqrt{1+3 \cos^2 \theta}} \\
 h_2 = h_p &=& \frac{R_e \sin^3 \theta}{\sqrt{1+3 \cos^2 \theta}} \\
 h_3 = h_\phi &=& r \sin \theta
 \end{eqnarray}
 
-Finally, dipole unit vectors may be derived by noting equivalence of various expressions for $d \mathbf{r}$:
+Finally, dipole unit vectors (separate quantities from the contravariant or covariant basis because they are unitless) may be derived by noting equivalence of various expressions for differential displacement $d \mathbf{r}$ and differential distance $dr$:
 \begin{equation}
 dr^2 = g_{ij} dx^i dx^j
 \end{equation}
@@ -696,19 +694,19 @@ where in the last equality we have reverted to explicit summation and use of pur
 \begin{equation}
 d \mathbf{r} = \sum_i h_i dx^i \hat{\mathbf{e}}_i
 \end{equation}
-The $\hat{\mathbf{e}}_i$ vectors here are true unit vectors since the differentials accompanying them $h_i dx^i$ have units of true distance (units of meters).  Comparing with Equation \ref{eqn:dr}, we see that (no summation):
+The $\hat{\mathbf{e}}_i$ vectors here are true unit vectors since the differentials accompanying them $h_i dx^i$ have units of distance (viz. meters).  Comparing with Equation \ref{eqn:dr}, we see that (no summation implied):
 \begin{equation}
 \hat{\mathbf{e}}_i = \frac{1}{h_i} \boldsymbol{\varepsilon}_i
 \end{equation}
-Alternatively we may write down the units vectors in terms of the contravariant basis (which could be easier to compute) (no sum over $i$ - only $j$):
+Alternatively we may write down the units vectors in terms of the contravariant basis (which may be easier to compute depending on the particular form of the coordinate transformation equations) (no sum implied over index $i$ - only $j$):
 \begin{equation}
 \hat{\mathbf{e}}_i = \frac{g_{ij}}{h_i} \boldsymbol{\varepsilon}^j
 \end{equation}
-In an orthogonal system only the diagonal elements of the metric are present, so that the unit vectors become (no summation):
+In an orthogonal system only the diagonal elements of the metric are present, so that the unit vectors become (no summation implied):
 \begin{equation}
 \hat{\mathbf{e}}_i = \frac{g_{ii}}{h_i} \boldsymbol{\varepsilon}^i = h_i \boldsymbol{\varepsilon}^i 
 \end{equation}
-Invoking this result with the above-derived contravariant basis vectors gives:
+Invoking this result with the contravariant basis vectors for the dipole coordinate system gives:
 \begin{eqnarray}
 \hat{\mathbf{e}}_1 &=& \frac{-3 \cos \theta \sin \theta \cos \phi}{\sqrt{1+3 \cos^2 \theta } } ~ \hat{\mathbf{e}}_x + \frac{-3 \cos \theta \sin \theta \sin \phi}{\sqrt{1+3 \cos^2 \theta } } ~ \hat{\mathbf{e}}_y + \frac{\left( 1 - 3 \cos^2 \theta \right) }{\sqrt{1+3 \cos^2 \theta } }~ \hat{\mathbf{e}}_z \\
 \hat{\mathbf{e}}_2 &=& \frac{\cos \phi \left(1 - 3 \cos^2 \theta \right)}{\sqrt{1 + 3 \cos^2 \theta}} ~ \hat{\mathbf{e}}_x + \frac{\sin \phi \left(1 - 3 \cos^2 \theta \right)}{\sqrt{1 + 3 \cos^2 \theta}}~ \hat{\mathbf{e}}_y + ~  \frac{\cos \theta \sin \theta}{\sqrt{1+3 \cos^2 \theta }} \hat{\mathbf{e}}_z \\
