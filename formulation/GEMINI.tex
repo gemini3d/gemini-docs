@@ -545,11 +545,19 @@ When an EFL approximation is used, the field aligned current calculation differs
 \end{equation}
 where $x_1'$ and $x_1''$ represent two different locations on the computational grid.  
 
-Note that it is \emph{always} necessary to know the current density at one of the model $x_1$ locations (ostensibly at a boundary) to produce a solution for parallel current over the entired grid via Equation \ref{eqn:FACcalc}.  Two different choices of ``top'' and "bottom" boundary conditions (i.e. those in the $x_1$-direction) can be used to specify the current somewhere on the grid:  (1) a user-specified a potential pattern (``Dirichlet'' conditions) and (2) a user-specified field-aligned current pattern (``Neumann'' conditions).  If ``Dirichlet'' conditions are the perpendicular current may be directly calculated and used with the assumption that the field-aligned current at the lowest altitude of the model is zero to produce an expression for the parallel current throughout the domain.  In the case that the lowest altitude corresponds to the maximum $x_1$ value we have:
+It is \emph{always} necessary to know the current density at one of the model $x_1$ locations (normally this location would be at a boundary) to produce a solution for parallel current over the entire grid via Equation \ref{eqn:FACcalc}.  Two different types of boundary conditions (i.e. those in the $x_1$-direction) can be used by GEMINI:  (1) a user-specified a potential pattern (``Dirichlet'' conditions) and (2) a user-specified field-aligned current pattern (``Neumann'' conditions).  A field aligned current can be related to Neumann conditions on potential via the equation:
+\begin{equation}
+  J_1 = - \frac{\sigma_0}{h_1} \frac{\partial \Phi}{\partial x_1}; \qquad \frac{\partial \Phi}{\partial x_1} = -\frac{h_1 J_1}{\sigma_0}
+\end{equation}
+
+If Dirichlet boundary conditions are used, the perpendicular current may be directly calculated and used with the assumption that the field-aligned current at the lowest altitude of the model is zero to produce an expression for the parallel current throughout the domain.  
+
+For Neumann conditions, if the given field-aligned current boundary condition corresponds to the maximum $x_1$ value we may calculate $J_1$ everywhere on the grid by:
 \begin{equation}
 \left. \left[ h_2 h_3 J_1 \right] \right|_{x_1} = \left. \left[ h_2 h_3 J_1 \right] \right|_{x_{1,max}} + \int_{x_1}^{x_{1,max}} h_1 h_2 h_3 \left( \nabla_\perp \cdot \mathbf{J}_\perp \right) d x_1
 \end{equation}
-If the lowest altitude corresponds to the minimum $x_1$ value, the parallel current over the rest of the grid can be calculated from:
+
+If the given Neumann boundary condition corresponds to the minimum $x_1$ value, the parallel current over the rest of the grid can be calculated from:
 \begin{equation}
 \left. \left[ h_2 h_3 J_1 \right] \right|_{x_1} = \left. \left[ h_2 h_3 J_1 \right] \right|_{x_{1,min}} - \int_{x_{1,min}}^{x_1} h_1 h_2 h_3 \left( \nabla_\perp \cdot \mathbf{J}_\perp \right) d x_1
 \end{equation}
