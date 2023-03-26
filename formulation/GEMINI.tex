@@ -24,7 +24,7 @@
 %\linenumbers
 
 \title{\textbf{GEMINI}:  \textbf{G}eospace \textbf{E}nvironment \textbf{M}odel of \textbf{I}on-\textbf{N}eutral \textbf{I}nteractions}
-\author{Matthew D. Zettergren, PhD\\ Associate Professor of Engineering Physics\\ Center for Space and Atmospheric Physics\\ Physical Sciences Department \\Embry-Riddle Aeronautical University\\mattzett@gmail.com}
+\author{Matthew D. Zettergren, PhD\\ \texttt{matthew.zettergren@icloud.com}}
 \maketitle
 
 \tableofcontents
@@ -40,38 +40,22 @@
 
 %Check section with geomag. to geographic transformations (they differ from \citet{Huba:2000})
 
-%Add advection boundary conditions section
+% Add material on vector rotations
 
+%Add advection boundary conditions section
 
 \section{Preface}
 
-\subsection{Purpose of this document}
+The \textbf{G}eospace \textbf{E}nvironment \textbf{M}odel of \textbf{I}on-\textbf{N}eutral \textbf{I}nteractions (GEMINI) is a general-purpose, three-dimensional (3D) terrestrial ionospheric model capable of describing many processes relevant to the ionosphere at medium to small spatial scales (200 m to 10000 km).  Several well-established global models of the terrestrial ionosphere exist; however, there are comparatively fewer ``standard'' and general-purpose models for small-scale phenomena (as of 2018), which was a motivating factor behind the original development of GEMINI and the subsequent open-sourcing of the code.  
 
-The \textbf{G}eospace \textbf{E}nvironment \textbf{M}odel of \textbf{I}on-\textbf{N}eutral \textbf{I}nteractions (GEMINI) is a general-purpose, three-dimensional (3D) terrestrial ionospheric model capable of describing most processes relevant to the ionosphere at medium to small spatial scales (200 m to 10000 km).  In the field of ionospheric physics, there are several well-established global models of the terrestrial ionosphere exist; however, there are comparatively fewer ``standard'' models for small-scale phenomena (as of 2018), which was a motivating factor behind developing GEMINI and making it available to our scientific community.  
+%\subsection{Purpose of this Document}
 
-This document outlines the mathematical formulation of GEMINI and is intended to serve as a bridge between published descriptions of the model \citep{Zettergren:2012,Zettergren:2014,Zettergren:2015,Zettergren:2015b}, which are necessarily fairly terse, and the mathematical and (some) implementation details necessary to understand how the model functions.  A separate README describing how to compile and run the model is included on the GitHub site for the GEMINI project, which currently houses some 8 branches of the code, all adapted to different specific problems of interest but each having the same core numerical components. 
+This document outlines mathematical and numerical formulations of GEMINI and is intended to serve as a bridge between published descriptions of the model \citep{Zettergren:2012,Zettergren:2014,Zettergren:2015,Zettergren:2015b}, which are necessarily fairly terse, and the mathematical and implementation details necessary to understand how the model functions.  
 
-
-\subsection{Error reporting}
-
-Please report any apparent errors to me at:  mattzett@gmail.com
+READMEs describing how to compile and run the model for various use cases are included on the gemini3d GitHub organization website \url{https://github.com/gemini3d/}, which currently houses some numerous branches of the code.  The main repository, housing core fortran and C code is \url{https://github.com/gemini3d/gemini3d}; separate repositories exist for various model utilities, e.g. MATLAB and python scripts for input preparation and output visualization (\url{https://github.com/gemini3d/mat_gemini} and \url{https://github.com/gemini3d/pygemini}).  Please see the umbrella organization for a complete list of repositories.  Generally speaking, the most recent version or any source code that is intended for broader public use is kept in the \texttt{main} branch, though anyone is welcome to look over and use the development branches, as well.  
 
 
-\subsection{Design philosophy}
-
-During design of GEMINI top-level clarity and organization have generally been favored over speed and efficiency.  This decision was largely driven by hope that GEMINI would prove useful to others by being easy to adapt to a wide variety of problems; hence, the model has been designed with source code modification in mind.  Undoubtedly optimizations can and will be made in future branches/forks as needs arise.  
-
-GEMINI has also been designed to be easily extensible; e.g. it is feasible to add additional ion species into the model or to use a Cartesian or other type of orthogonal curvilinear grid.  In principle, the GEMINI codebase could potentially be used to develop simulations of ionospheres (more generally, collisional plasmas) for many different types of of planets/environments.  
-
-As a final, general, note, GEMINI can run with either a 2D or 3D orthogonal, curvilinear grid.  The 2D functionality was included to facilitate very high-resolution runs in two dimensions, which become overly burdensome in GEMINI's parent MATLAB code.  Special cases in the mathematical formulation and numerical implementation arising when using a 2D grid are discussed in detail in Section \ref{sec:2D} of this document.  
-
-
-\subsection{GEMINI development history}
-
-GEMINI is an evolution of the model first used in \citet{Zettergren:2012} to study terrestrial ionospheric plasma density structures generated by two-dimensional auroral current systems.  It was later extended by \citet{Zettergren:2013} to study low-latitude forcing by infrasonic/acoustic wave and then in \citet{Zettergren:2014} to ingest highly processed data products to specify boundary conditions.  These initial model prototypes were coded in MATLAB; \citet{Zettergren:2015b} translated the model into fortran with MPI parallelization and added in the third dimension in Cartesian coordinates.  The present version extends the 3D fortran model further to include general orthogonal curvilinear coordinates (publication TBD).  
-
-
-\subsection{Executive summary}
+\section{Executive Summary}
 
 The 3D ionospheric ``\underline{G}eospace \underline{E}nvironment \underline{M}odel for \underline{I}on-\underline{N}eutral \underline{I}nteractions'' (GEMINI), is based on the existing 2D model developed by \citet{Zettergren:2012} and later extended by \citet{Zettergren:2013,Zettergren:2014,Zettergren:2015b}.  The present form of GEMINI functions in two or three dimensions, and uses general orthogonal curvilinear coordinates, usually either a tilted dipole \citep{Huba:2000} or Cartesian system. The model comprises a fluid system of equations \citep{Schunk:1977,Blelly:1993}, describing dynamics of the ionospheric plasma, self-consistently coupled to an electrostatic treatment of auroral and neutral dynamo currents. The fluid system is a set of three conservation equations (mass, momentum, and energy) for each ionospheric species $s$ relevant to the E-, F-, and topside regions ($s=\mathrm{O^+,NO^+,N_2^+,O_2^+,N^+,H^+}$). 
 \begin{linenomath*} \begin{equation}
@@ -121,12 +105,37 @@ The most recent detailed descriptions of GEMINI are in recent publications by \c
 
 GEMINI includes capabilities to couple input from neutral dynamics models by way of files and automatically does interpolation, and rotation of neutral wind, density, and temperature perturbations (deviations from MSIS00) onto its curvilinear grid.  These perturbations are then factored into all ionospheric calculations that use neutral parameters (dynamo, collisions, ionization, chemistry, etc.).  Note that the coupling here is one-way (viz. neutrals affecting ions).  Examples of using neutral dynamics information to drive GEMINI have been published by \citet{Zettergren:2013,Zettergren:2015,Zettergren:2017}.  
 
-Boundary conditions for electric potential, background electric fields, and field-aligned currents and electron precipitation can be included in GEMINI through input files.  These inputs can be specified independent on a grid different from that used in GEMINI and are automatically interpolated to the simulation grid positions.  
+Boundary conditions for electric potential, background electric fields, and field-aligned currents and electron precipitation can be included in GEMINI through input files.  These inputs can be specified independent on a grid different from that used in GEMINI and are automatically interpolated to the simulation grid positions and time basis.  
 
-A branch of GEMINI exists that uses the suprathermal electron transport code GLOW to specify ionization and heating reates instead of \citet{Fang:2008,Swartz:1972}.  This version has the ability to separate between thermal and suprathermal field-aligned currents and is able to more accurately specify both thermal electron heating by suprathermal electrons and ionization rates of major species for an arbitration input electron precipitation pattern and distribution.  
+GEMINI can use the suprathermal electron transport code GLOW to specify ionization and heating rates instead of \citet{Fang:2008,Swartz:1972}.  This version has the ability to separate between thermal and suprathermal field-aligned currents and is able to more accurately specify both thermal electron heating by suprathermal electrons and ionization rates of major species for an arbitration input electron precipitation pattern and distribution.  
 
 
-\section{Mathematical formulation}
+\section{Design and Development}
+
+\subsection{Community Participation}
+
+The GEMINI development team welcomes use and contributions from the community in the form of code and bug reports -- the goal of this project is to have robust use by and contributions from interested members in our research community and beyond.  Bugs and code additions are tracked via GitHub's issue reporting tools (for errors) and pull request functionality (for code contributions to a particular repository).  We encourage persons identifying potential bugs in the code to consider reporting these via the issues menu from the relevant repository.  If you wish to contribute fixes or additions to the code please fork and submit a pull request with your changes and a brief description.  
+
+\subsection{Design Philosophy}
+
+We have generally adopted an approach of favoring top-level clarity and organization in outward-facing parts of our source code with efficient numerical implementation included in modules several layers below the main application-level codes.  Hence the most common user-level functions (creating simulations and visualization output) are implemented via Python and MATLAB scripts, while core numerical functions, which are very performance sensitive, are implemented in either modern Fortran or C.  Compiled GEMINI applications (both C and Fortran versions) consist of a series of function/subroutine calls to the main gemini library \texttt{libgemini}, which contains interfaces to various lower-level solvers and data-preparation utilities -- al of which can be modified by users for specific needs.  This architecture was largely driven by hope that GEMINI would prove useful to others by being easy to adapt to a wide variety of problems. 
+
+%GEMINI has also been designed to be easily extensible; e.g. it is feasible to add additional ion species into the model or to use a Cartesian or other type of orthogonal curvilinear grid.  In principle, the GEMINI codebase could potentially be used to develop simulations of ionospheres (more generally, collisional plasmas) for many different types of of planets/environments.  
+
+\subsection{GEMINI Mesh Geometries and Management}
+
+GEMINI can run with either a 2D or 3D orthogonal, curvilinear grid.  The 2D functionality is included to facilitate very high-resolution runs in two dimensions, which become overly burdensome in GEMINI's parent MATLAB code.  Special cases in the mathematical formulation and numerical implementation arising when using a 2D grid are discussed in detail in Section \ref{sec:2D} of this document.  
+
+Parallelization is critical for efficient 2D and 3D ionospheric simulation at high resolution.  GEMINI uses a parallel domain-decomposition approach which is implemented through message passing interface (MPI) protocols via MPICH or OPENMPI libraries.  Most GEMINI functions are, thus, intended to run on self-contained ``patches'' of data including mesh information, ionospheric state parameters, and input data for a small, contiguous piece of the overall grid.  Solutions on these patches are then conducted in parallel with data exchange along the boundaries (with some exceptions that requires some global information about the domain or plasma state).  The relatively independence of this patches then means that the overlying mesh management can be as simple as concatenating a bunch of identical resolution domains into a regular grid, or as complicated as block adaptive mesh refinement -- the core numerical implementations are largely agnostic to top-level mesh management.  
+
+In applications of GEMINI we have typically favored higher resolution over higher-order methods - this is largely motivated by the information passing required along patch boundaries.  We prefer smaller stencils (lower order methods) combined with small cell spacing to reduce message passing overhead.  
+
+\subsection{GEMINI Development History}
+
+GEMINI is an evolution of the model first used in \citet{Zettergren:2012} to study terrestrial ionospheric plasma density structures generated by two-dimensional auroral current systems.  It was later extended by \citet{Zettergren:2013} to study low-latitude forcing by infrasonic/acoustic wave and then in \citet{Zettergren:2014} to ingest highly processed data products to specify boundary conditions.  These initial model prototypes were coded in MATLAB; \citet{Zettergren:2015b} translated the model into fortran with MPI parallelization and added in the third dimension in Cartesian coordinates.  Further enhancements to the Fortran code to include general orthogonal curvilinear coordinates \citep{Zettergren:2019}.  \citet{Diaz:2021} presented calculations with GEMINI using impact ionization and heating sources computed from a kinetic code.  Recent efforts have included major code refactors for numerous improvements to internal data handling, mesh management, input/output data handling \citep{Clayton:2021}, etc. 
+
+
+\section{Mathematical Formulation}
 
 GEMINI comprises a fluid system of equations \citep{Schunk:1977,Blelly:1993,Huba:2000}, describing dynamics of the ionospheric plasma, self-consistently coupled to an electrostatic treatment of auroral and neutral dynamo currents that is based on a steady-state current continuity equation.  These systems of equations are discussed in detail in this section.  
 
