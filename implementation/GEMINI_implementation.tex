@@ -94,12 +94,71 @@ These studies encapsulate a wide range of applications of the model from equator
 
 \section{GEMINI Source Code Repositories}
 
-Due to the large amount of source code, GEMINI is organized into about a dozen repositories ranging from core model numerical parts to scripts that allow one to build all external library dependencies.  
+GEMINI is organized into about a dozen repositories ranging from core model numerical parts to scripts that allow one to build all external library dependencies.  To run the code requires two repositories to be built (\texttt{external} and \texttt{gemini3d}) and installed while visualization requires a third, scripting library (either \texttt{mat\_gemini} or \texttt{pygemini}).  
+
+Additionally trees-GEMINI (cf. Section \ref{sec:tG}) supports visualization tookit output files (vtu) which can be plotted using the open source, 3D visualization software Paraview.  
 
 
 \section{Cmake Build System for GEMINI}
 
 \emph{MH - focus on current state and additions made during AIRWaveS}
+
+
+
+\section{GEMINI Data Structures}
+
+\subsection{Mesh Objects}
+
+Capability to recompute and reconfigure arbitrary mesh during runtime; this calculation must not exceed the roughly the computational cost of a typical time step (TA 1.1.2, 1.1.3).
+
+\subsection{Inputdata Objects}
+
+Framework for handling general input data from different models; file I/O and interpolation in space and time from a clean interface, minimal duplication (TA 1.2.4, 1.3.1).
+
+
+\subsection{Output Data Formats and Files}
+
+\emph{MH - h5fortran and output information}
+
+
+\section{GEMINI Umbrella Library:  \texttt{libgemini}}
+
+To allow maximum flexibility in how GEMINI functionality is used, we have developed a library containing core functionality that is accessible from applications written in fortran, C, and C++ languages.  
+
+Code reorganized/refactored to allow integration into forestclaw — separation of code into core numerical v. mpi components.  MPI swappable with other mesh management libraries.  Robust, stable, and performant interlanguage operations (TA 1.1.2, 1.1.3).
+
+
+\emph{MZ - Modularization of app-level implementation from numerical operations}
+
+\emph{MZ - Isolation of grid and solution data; toward allowing multiple patches on a single worker}.  There is a need in some applications for GEMINI to accommodate multiple independent sub-domains (with attendant grid and solution data) on a single mpi worker.  This precludes use of any module-scope variables as these are limited to one per worker and required a full code refactor so that grid and solution data are always passed to numerical routines as procedure arguments (and not thru common blocks or module-scope variables).  
+
+\emph{MZ - C interoperability details}
+
+
+
+\section{The \texttt{trees-GEMINI} Application} \label{sec:tG}
+
+A GEMINI application has been implemented under the forestclaw API in order to allow adaptive mesh refinement (AMR) using forestclaw's three-dimensional, extruded mesh capabilities.  EMINI applications using ForestClaw / p4est AMR, termed Trees-GEMINI, have recently been developed as part of Phase 1 of DARPA's AtmoSense program.  Our current setup uses GEMINI with an ``extruded'' mesh, whereby the AMR is done in two dimensions while the full extent of the third dimension is held on each computational ``patch'' (see Figure \ref{fig:parallel}).  In Trees-GEMINI the extruded dimension is along geomagnetic field line which allows us to use existing implicit solvers for the numerically stiff electron thermal conduction process.  Such solvers require all data along the parallel coordinate at once to function but are capable of dealing with the fast thermal conduction time scales (in the electron population) while maintaining an otherwise reasonable time step for other explicit solutions for transport.  Figure \ref{fig:parallel} shows a diagram illustrating logical arrangements of coordinates and subdomains organized by mpi worker and patch number.  
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{./figures/GEMINI_parallel-crop.pdf}
+  \caption{Trees-GEMINI use of forestclaw extruded mesh AMR and parallelization.}
+  \label{fig:parallel}
+\end{figure}
+
+Figure \ref{fig:Trees-GEMINI} shows a Trees-GEMINI simulation using multiply refined regions to model low-frequency acoustic wave propagation through the ionosphere using input from the MAGIC atmospheric dynamics model.  
+
+Trees-GEMINI currently contains most of the functionality of the core libGEMINI libraries including input data handling, dipole and Cartesian meshes, specifications of boundary conditions, fluid plasma solvers (chemistry, advection, diffusion), photoionization and impact ionization solvers, along with new output routines to optionally generate \texttt{vtk/vtu} files for efficient 3D visualization via the Paraview multi-platform open source application (Figure \ref{fig:Trees-GEMINI} shows an example).  It currently does not have a AMR-capable (quasi-static) potential solution in the manner of the core GEMINI library as this functionality was not required by the projects that funded development of Trees-GEMINI.  While the MAGIC data are historically input via files, a strategy for running the models side-by-side and exchanging data (one-way) thru memory is currently in development and testing as part of AtmoSense in a form that can, next, be reciprocated from GEMINI to MAGIC.  %Two-way GEMINI-MAGIC communication is not part of any currently funded project and will be needed for the proposed studies.  
+\begin{figure}
+  \includegraphics[width=\textwidth]{./figures/allGEMINI-crop.pdf}
+  \caption{Trees-GEMINI simulation of mHz acoustic waves (AWs) propagating through the ionosphere using input data from MAGIC.  (a,b) The overall grid and refinement structures used in the simulation, (c) the configuration of plasma flow, (d) individual output frame illustrating how AW forces ion flows in the F-region and topside.}
+  \label{fig:Trees-GEMINI}
+\end{figure}
+
+
+
+\section{Postprocessing and Visualization Scripts}
+
 
 
 
@@ -130,46 +189,7 @@ A more comlpete description of each of these tests is given in the README file i
 
 
 
-\section{GEMINI Data Structures}
-
-\subsection{Mesh Objects}
-
-\subsection{Inputdata Objects}
-
-\subsection{Output Data Formats and Files}
-
-\emph{MH - h5fortran and output information}
-
-
-\section{GEMINI Umbrella Library:  \texttt{libgemini}}
-
-To allow maximum flexibility in how GEMINI functionality is used, we have developed a library containing core functionality that is accessible from applications written in fortran, C, and C++ languages.  
-
-\emph{MZ - Modularization of app-level implementation from numerical operations}
-
-\emph{MZ - Isolation of grid and solution data; toward allowing multiple patches on a single worker}.  There is a need in some applications for GEMINI to accommodate multiple independent sub-domains (with attendant grid and solution data) on a single mpi worker.  This precludes use of any module-scope variables as these are limited to one per worker and required a full code refactor so that grid and solution data are always passed to numerical routines as procedure arguments (and not thru common blocks or module-scope variables).  
-
-\emph{MZ - C interoperability details}
-
-\emph{diagram illustrating parallelization using wokers, patches, and AMR}
-
-
-
-\section{The \texttt{trees-GEMINI} Application}
-
-A GEMINI application has been implemented under the forestclaw API in order to allow adaptive mesh refinement (AMR) using forestclaw's three-dimensional, extruded mesh capabilities.  EMINI applications using ForestClaw / p4est AMR, termed Trees-GEMINI, have recently been developed as part of Phase 1 of DARPA's AtmoSense program.  Our current setup uses GEMINI with an ``extruded'' mesh, whereby the AMR is done in two dimensions while the full extent of the third dimension is held on each computational ``patch''.  In Trees-GEMINI the extruded dimension is along geomagnetic field line which allows us to use existing implicit solvers for the numerically stiff electron thermal conduction process.  Such solvers require all data along the parallel coordinate at once to function but are capable of dealing with the fast thermal conduction time scales (in the electron population) while maintaining an otherwise reasonable time step for other explicit solutions for transport.  Figure \ref{fig:Trees-GEMINI} shows a Trees-GEMINI simulation using multiply refined regions to model low-frequency acoustic wave propagation through the ionosphere using input from the MAGIC atmospheric dynamics model.  
-
-Trees-GEMINI currently contains most of the functionality of the core libGEMINI libraries including input data handling, dipole and Cartesian meshes, specifications of boundary conditions, fluid plasma solvers (chemistry, advection, diffusion), photoionization and impact ionization solvers, along with new output routines to optionally generate \texttt{vtk/vtu} files for efficient 3D visualization via the Paraview multi-platform open source application (Figure \ref{fig:Trees-GEMINI} shows an example).  It currently does not have a AMR-capable (quasi-static) potential solution in the manner of the core GEMINI library as this functionality was not required by the projects that funded development of Trees-GEMINI.  While the MAGIC data are historically input via files, a strategy for running the models side-by-side and exchanging data (one-way) thru memory is currently in development and testing as part of AtmoSense in a form that can, next, be reciprocated from GEMINI to MAGIC.  %Two-way GEMINI-MAGIC communication is not part of any currently funded project and will be needed for the proposed studies.  
-
-\begin{figure}
-  \includegraphics[width=\textwidth]{./figures/allGEMINI-crop.pdf}
-  \caption{Trees-GEMINI simulation of mHz acoustic waves (AWs) propagating through the ionosphere using input data from MAGIC.  (a,b) The overall grid and refinement structures used in the simulation, (c) the configuration of plasma flow, (d) individual output frame illustrating how AW forces ion flows in the F-region and topside.}
-  \label{fig:Trees-GEMINI}
-\end{figure}
-
-
-
-\section{Validation with GNSS Data}
+\section{Comparisons Against GNSS Data}
 
 
 
