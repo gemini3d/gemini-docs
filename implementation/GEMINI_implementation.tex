@@ -51,6 +51,35 @@ GEMINI presently assumes that the geomagnetic field lines are equipotentials (a 
 
 
 
+\section{GEMINI Model Heritage}
+
+The use of GEMINI for scientific applications is documented in a number of studies and associated refereed journal articles:  
+\begin{itemize}
+  \item \bibentry{Zettergren:2012}
+  \item \bibentry{Zettergren:2013}
+  \item \bibentry{Zettergren:2014}
+  \item \bibentry{Zettergren:2015}
+  \item \bibentry{Zettergren:2015b}
+  \item \bibentry{Lynch:2015}
+  \item \bibentry{Perry:2015}
+  \item \bibentry{Burleigh:2017}
+  \item \bibentry{Swoboda:2017}
+  \item \bibentry{Zettergren:2017}
+  \item \bibentry{Burleigh:2018}
+  \item \bibentry{Zettergren:2019}  
+  \item \bibentry{Burleigh:2019}  
+  \item \bibentry{Deshpande:2019}  
+  \item \bibentry{Inchin:2020} 
+  \item \bibentry{Spicher:2020}   
+  \item \bibentry{Inchin:2021} 
+  \item \bibentry{Diaz:2021} 
+  \item \bibentry{Clayton:2021} 
+  \item \bibentry{Lamarche:2022} 
+  \item \bibentry{Burleigh:2022}  
+\end{itemize}
+
+These studies encapsulate a wide range of applications of the model from equatorial to low/mid-latitude and high-latitude and a number of studies where the model output has been critically compared against available data in validation exercises.  Additional validation tests not yet published are included in later sections of this document.  GEMINI's technology readiness level (TRL) is thus suggested as TRL6.  
+
 \section{Internal Organization of GEMINI}
 
 \emph{MZ - top-level model connections}
@@ -61,7 +90,11 @@ GEMINI presently assumes that the geomagnetic field lines are equipotentials (a 
 
 \emph{MZ - example external libraries}
 
-\emph{}
+
+
+\section{GEMINI Source Code Repositories}
+
+Due to the large amount of source code, GEMINI is organized into about a dozen repositories ranging from core model numerical parts to scripts that allow one to build all external library dependencies.  
 
 
 \section{Cmake Build System for GEMINI}
@@ -103,9 +136,12 @@ A more comlpete description of each of these tests is given in the README file i
 
 \subsection{Inputdata Objects}
 
+\subsection{Output Data Formats and Files}
+
+\emph{MH - h5fortran and output information}
 
 
-\section{\texttt{libgemini}}
+\section{GEMINI Umbrella Library:  \texttt{libgemini}}
 
 To allow maximum flexibility in how GEMINI functionality is used, we have developed a library containing core functionality that is accessible from applications written in fortran, C, and C++ languages.  
 
@@ -119,7 +155,7 @@ To allow maximum flexibility in how GEMINI functionality is used, we have develo
 
 
 
-\section{\texttt{trees-GEMINI}}
+\section{The \texttt{trees-GEMINI} Application}
 
 A GEMINI application has been implemented under the forestclaw API in order to allow adaptive mesh refinement (AMR) using forestclaw's three-dimensional, extruded mesh capabilities.  EMINI applications using ForestClaw / p4est AMR, termed Trees-GEMINI, have recently been developed as part of Phase 1 of DARPA's AtmoSense program.  Our current setup uses GEMINI with an ``extruded'' mesh, whereby the AMR is done in two dimensions while the full extent of the third dimension is held on each computational ``patch''.  In Trees-GEMINI the extruded dimension is along geomagnetic field line which allows us to use existing implicit solvers for the numerically stiff electron thermal conduction process.  Such solvers require all data along the parallel coordinate at once to function but are capable of dealing with the fast thermal conduction time scales (in the electron population) while maintaining an otherwise reasonable time step for other explicit solutions for transport.  Figure \ref{fig:Trees-GEMINI} shows a Trees-GEMINI simulation using multiply refined regions to model low-frequency acoustic wave propagation through the ionosphere using input from the MAGIC atmospheric dynamics model.  
 
@@ -133,12 +169,14 @@ Trees-GEMINI currently contains most of the functionality of the core libGEMINI 
 
 
 
-\section{}
+\section{Validation with GNSS Data}
+
+
 
 \pagebreak
 \setcounter{page}{1}
 
-\bibliography{ref.bib}
-
+%\bibliography{./ref.bib}
+\bibliography{../formulation/GEMINI.bib}
 
 \end{document}
