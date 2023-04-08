@@ -49,13 +49,24 @@ The use of a quasi-static solution notably omits Alfv\'en waves; however, many m
 %% MZ - cut to save space
 GEMINI presently assumes that the geomagnetic field lines are equipotentials (a particularly good assumption for highly conducting situations likely to accompany precipitation) and employs a field line integration in the equation solved to describe conservation of charge \citep[cf.][Equation 1]{Zettergren:2015}.  Newer versions of GEMINI also include additional current terms needed for high-resolution modeling, like diamagnetic currents and diffusive transport perpendicular to $\mathbf{B}$. 
 
+
+
+\section{Internal Organization of GEMINI}
+
+\emph{MZ - top-level model connections}
+
+\emph{MZ - top level GEMINI module organization}
+
+\emph{MZ - example lower-level organization}
+
+\emph{MZ - example external libraries}
+
+\emph{}
+
+
 \section{Cmake Build System for GEMINI}
 
 \emph{MH - focus on current state and additions made during AIRWaveS}
-
-
-
-\section{}
 
 
 
@@ -104,6 +115,8 @@ To allow maximum flexibility in how GEMINI functionality is used, we have develo
 
 \emph{MZ - C interoperability details}
 
+\emph{diagram illustrating parallelization using wokers, patches, and AMR}
+
 
 
 \section{\texttt{trees-GEMINI}}
@@ -117,6 +130,10 @@ Trees-GEMINI currently contains most of the functionality of the core libGEMINI 
   \caption{Trees-GEMINI simulation of mHz acoustic waves (AWs) propagating through the ionosphere using input data from MAGIC.  (a,b) The overall grid and refinement structures used in the simulation, (c) the configuration of plasma flow, (d) individual output frame illustrating how AW forces ion flows in the F-region and topside.}
   \label{fig:Trees-GEMINI}
 \end{figure}
+
+
+
+\section{}
 
 \pagebreak
 \setcounter{page}{1}
