@@ -96,7 +96,7 @@ These studies encapsulate a wide range of applications of the model from equator
 
 GEMINI is organized into about a dozen repositories ranging from core model numerical parts to scripts that allow one to build all external library dependencies.  To run the code requires two repositories to be built (\texttt{external} and \texttt{gemini3d}) and installed while visualization requires a third, scripting library (either \texttt{mat\_gemini} or \texttt{pygemini}).  
 
-Additionally trees-GEMINI (cf. Section \ref{sec:tG}) supports visualization tookit output files (vtu) which can be plotted using the open source, 3D visualization software Paraview.  
+Additionally trees-GEMINI (cf. Section \ref{sec:tG}) supports visualization toolkit output files (vtu) which can be plotted using the open source, 3D visualization software Paraview.  
 
 
 \section{Cmake Build System for GEMINI}
@@ -109,7 +109,7 @@ Additionally trees-GEMINI (cf. Section \ref{sec:tG}) supports visualization took
 
 \subsection{Mesh Objects}
 
-Capability to recompute and reconfigure arbitrary mesh during runtime; this calculation must not exceed the roughly the computational cost of a typical time step (TA 1.1.2, 1.1.3).
+The use of AMR requires the capability to recompute and reconfigure a mesh arbitrarily during runtime; furthermore, this calculation must not exceed the roughly the computational cost of a typical time step to fully benefit AMR (TA 1.1.2, 1.1.3).  
 
 \subsection{Inputdata Objects}
 
@@ -123,17 +123,17 @@ Framework for handling general input data from different models; file I/O and in
 
 \section{GEMINI Umbrella Library:  \texttt{libgemini}}
 
-To allow maximum flexibility in how GEMINI functionality is used, we have developed a library containing core functionality that is accessible from applications written in fortran, C, and C++ languages.  
-
-Code reorganized/refactored to allow integration into forestclaw — separation of code into core numerical v. mpi components.  MPI swappable with other mesh management libraries.  Robust, stable, and performant interlanguage operations (TA 1.1.2, 1.1.3).
-
+To allow maximum flexibility in how GEMINI functionality is used, we have developed a library containing core functionality that is accessible from applications written in fortran, C, and C++ languages.  Traditionally GEMINI had been a monolithic main program with calls to procedures from various modules and submodules in order to access numerical functions.  In contrast the code now is separated into \texttt{libgemini} which contains all the basic functionality needed to write a GEMINI application, and separate apps which are limited to calls to \texttt{libgemini}.  This model allows integration into forestclaw.  Furthermore mpi components have been fully separated from numerical procedures so that they are swappable with mesh management libraries.  
 
 \emph{MZ - Modularization of app-level implementation from numerical operations}
 
 \emph{MZ - Isolation of grid and solution data; toward allowing multiple patches on a single worker}.  There is a need in some applications for GEMINI to accommodate multiple independent sub-domains (with attendant grid and solution data) on a single mpi worker.  This precludes use of any module-scope variables as these are limited to one per worker and required a full code refactor so that grid and solution data are always passed to numerical routines as procedure arguments (and not thru common blocks or module-scope variables).  
 
-\emph{MZ - C interoperability details}
+\subsection{C-fortran Interoperability}
 
+Core GEMINI numerical functions are written in fortran 2008, while forestclaw uses C/C++.  The fortran 2003 standard brought \texttt{iso\_c\_binding} intrinsic module and \texttt{bind (C)} procedures to facilitate compilation alongside and use with to other languages.  This new interface helps to make linking robust across compilers and computing platforms and eliminates some of the traditional problems of a multi-language project like AIRWaveS.  Importantly, structures and pointers can be seamlessly passed between languages allowing flexibility in memory allocation and ease of integration of different code components.  We have made extensive use of these facilities in Gemini3D specifically to allow ease of co-compiling the model with forestclaw and p4est.  Generally speaking GEMINI uses procedures \texttt{c\_f\_pointer} and \texttt{c\_loc} to translate C and fortran pointers back and forth.  
+
+Because many of the forestclaw routines need to be run on individual patch data, GEMINI must be able to accept mesh, solution, and internal variable data for a given patch into model computational routines while also returning opaque ``handles'' to these object to the calling C program for passage into further processing routines.  Complex internal variables (e.g. fortran structures and objects) are passed from forestclaw into GEMINI via \texttt{void} pointers, which since fortran passes data by default by reference, becomes \texttt{void**} data types when used from C/C++.  An additional complication arises because the datatypes used in GEMINI are polymorphic, e.g. meshes can be of the Cartesian or dipole types, both of which inherit properties and methods from a general curvilinear mesh object.  To accommodate this arguments to numerical routines must include grid type information in a primitive format (e.g. integer flag), which can be used by \texttt{libgemini} to ``typecast'' the \texttt{void**} datatype into a class pointer of the correct type for use internally (see source code for more details).  
 
 
 \section{The \texttt{trees-GEMINI} Application} \label{sec:tG}
