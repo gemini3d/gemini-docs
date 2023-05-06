@@ -78,17 +78,7 @@ The use of GEMINI for scientific applications is documented in a number of studi
   \item \bibentry{Burleigh:2022}  
 \end{itemize}
 
-These studies encapsulate a wide range of applications of the model from equatorial to low/mid-latitude and high-latitude and a number of studies where the model output has been critically compared against available data in validation exercises.  Additional validation tests not yet published are included in later sections of this document.  GEMINI's technology readiness level (TRL) is thus suggested as TRL6.  
-
-\section{Internal Organization of GEMINI}
-
-\emph{MZ - top-level model connections}
-
-\emph{MZ - top level GEMINI module organization}
-
-\emph{MZ - example lower-level organization}
-
-\emph{MZ - example external libraries}
+These studies encapsulate a wide range of applications of the model from equatorial to low/mid-latitude and high-latitude and a number of studies where the model output has been critically compared against available data in validation exercises.  Additional validation tests not yet published are included in later sections of this document.  GEMINI's technology readiness level (TRL) is  suggested to be TRL6.  
 
 
 
@@ -96,7 +86,33 @@ These studies encapsulate a wide range of applications of the model from equator
 
 GEMINI is organized into about a dozen repositories ranging from core model numerical parts to scripts that allow one to build all external library dependencies.  To run the code requires two repositories to be built (\texttt{external} and \texttt{gemini3d}) and installed while visualization requires a third, scripting library (either \texttt{mat\_gemini} or \texttt{pygemini}).  
 
-Additionally trees-GEMINI (cf. Section \ref{sec:tG}) supports visualization toolkit output files (vtu) which can be plotted using the open source, 3D visualization software Paraview.  
+Additionally trees-GEMINI (cf. Section \ref{sec:tG}) supports visualization toolkit output files (vtu) which can be plotted using the open source, 3D visualization software Paraview.  Paraview represents a notable exception to the required visualization back-end scripts; \texttt{vtu} files can be read directly into Paraview using its graphical interface.  
+
+A complete list of gemini repositories and their basic purposes follow (see repository readme files for details).  These are all collected into the \href{https://github.com/gemini3d/}{gemini3d organization} - and ``umbrella'' organization that holds all GEMINI code repositories, documentation, and bug-tracking and includes:  
+\begin{itemize}
+  \item \href{https://github.com/gemini3d/gemini3d/}{gemini3d} - the core GEMINI fortran, C/C++ code.  
+  \item \href{https://github.com/gemini3d/pygemini}{pygemini} - Python front- and back-end scripts for preparing simulation input data and gridding and plotting output.  
+  \item \href{https://github.com/gemini3d/pygemini}{mat\_gemini} - MATLAB front- and back-end scripts for preparing simulation input data and gridding and plotting output.  
+  \item  \href{https://github.com/gemini3d/gemini-docs}{gemini-docs} - Set of documentation for the model
+  \item  \href{https://github.com/gemini3d/gemini-examples}{gemini-examples} - Set of initialization files and scripts for creating different types of simulation setups.    
+\end{itemize}
+
+
+
+\section{Internal Organization of GEMINI}
+
+Figure \ref{fig:org} shows a top level diagram of GEMINI inputs and coupling with other AIRWaveS models, specifically for the situation where model data are passed through files -- recent advances have made it possible to pass information from MAGIC into GEMINI through memory using the forestclaw mesh management software; however, GEMINI still retains the ability to do coupling through file i/o, which while slower is simpler to use.  
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{./figures/GEMINI_org-crop.pdf}
+  \caption{GEMINI file-based interfaces and postprocessing.} \label{fig:org}
+\end{figure}
+
+\emph{MZ - top level GEMINI module organization}
+
+\emph{MZ - example lower-level organization}
+
+\emph{MZ - example external libraries}
 
 
 \section{Cmake Build System for GEMINI}
@@ -107,13 +123,54 @@ Additionally trees-GEMINI (cf. Section \ref{sec:tG}) supports visualization tool
 
 \section{GEMINI Data Structures}
 
+Until recently data have largely been encapsulated in modules as module global variables that can be accessed from other program units via \emph{use} statements.  While this makes for easy implementation for a number of numerical solutions, it has the issue that there can be only only one set of data per mpi worker (i.e. each worker has one module ``instance'').  To address this issue, it makes sense to encapsulate data and associated procedures using fortran object-oriented capabilities.  These allow us to better organize our data and pass it simply into processing routines along with the necessary feature that one worker can possess multiple data objects, for our purposes  grid and solution data for multiple forestclaw patches.  
+
+
 \subsection{Mesh Objects}
 
-The use of AMR requires the capability to recompute and reconfigure a mesh arbitrarily during runtime; furthermore, this calculation must not exceed the roughly the computational cost of a typical time step to fully benefit AMR (TA 1.1.2, 1.1.3).  
+The use of AMR requires the capability to recompute and reconfigure a mesh arbitrarily during runtime; furthermore, this calculation must not exceed the roughly the computational cost of a typical time step to fully benefit AMR (TA 1.1.2, 1.1.3).  Historically GEMINI meshes had been computed by the MATLAB front-end scripting environment (\texttt{mat\_gemini}).
+
+As part of this project we have also added the ability to compute meshes using \texttt{pygemini}, in case these are needed for any pre- or post-processing tasks.  
+
+Additionally to address needs of dynamic re-meshing the input grid information is handled differently now.  Instead of having the root process read in the grid coordinates, along with all metric factors, unit vectors, and additional information like magnetic field strength, only the coordinate array are passed into the GEMINI core code and then then all other quantities are computed from these internally and by each worker or patch instance of the model.  This effectively parallelizes the computationally expensive parts of the mesh generation, with testing showing a 10x improvements in performance on a single core (when compared against script mesh generation and, on top of that, almost perfect scaling with the number of cores used for the mesh generation.
+
+There is also the potential that AIRWaveS and future related activities may need additional coordinate systems other than dipole or Cartesian.  Thus, during the process of absorbing the mesh generation were into the core GEMINI code we created an object-oriented approach to the organization of mesh data within a given \texttt{mpi} worker (or forestclaw patch).  This approach has benefits of making it relatively clean and easy (from a coding point of view) to adapt new mesh types using different coordinate systems. Additionally these objects can be passed to an overlying fortran or C program in order to have numerical operations performed independently on different subdomains of a parallel mesh rather than relying on common blocks or module scope variables to convey mesh information -- which limits the model architecture to one subdomain per \texttt{mpi} worker.
+
+Fortran objects and derived types (including polymorphic variables) are passed/returned to C calling programs as \texttt{void*} pointers, i.e. as type \texttt{void**}.  When the C calling program runs libgemini, the void* pointer is converted into the correct dynamically typed fortran object through a call which check user supplied object (e.g. grid) type information.  There are some fortran language subtleties to how this is done since the C-to-fortran pointer conversion procedure \texttt{c\_f\_pointer} will only work with fortran objects that are statically typed (and not polymorphic).  However, the grid object is handled as a polymorphic variable by most procedures to avoid having to write separate functions for different types of grid objects.  We work around this in GEMINI by using a function (\texttt{set\_gridpointer\_dyntype}) that included local statically typed pointers to every possible grid type.  These \emph{can} be used with \texttt{c\_f\_pointer} and then subsequently bound to a pointer to a polymorphic grid type.  This rather subtle workaround is implementation is shown below as it is central to and crucial for the encapsulation of GEMINI within forestclaw.  
+
+\begin{verbatim}
+  !> set fortran object pointer dynamic type to what is indicated in objtype.  
+  !>   Convert C pointer using declared static types (c_f_pointer will not work on 
+  !>    a polymorphic object).
+  function set_gridpointer_dyntype(xtype,xC) result(x)
+    type(c_ptr), intent(in) :: xC
+    integer(C_INT), intent(in) :: xtype
+    class(curvmesh), pointer :: x
+    type(cartmesh), pointer :: xcart
+    type(dipolemesh), pointer :: xdipole
+
+    select case (xtype)
+      case (1)
+        call c_f_pointer(xC,xcart)
+        x=>xcart
+      case (2)
+        call c_f_pointer(xC,xdipole)
+        x=>xdipole
+      case default
+        error stop 'unable to identify object type during conversion &
+                           from C to fortran class pointer'
+    end select
+  end function set_gridpointer_dyntype
+\end{verbatim}
+
+This function can be called to convert the C pointer to the fortran object (and a given type) into a class (polymorphic) pointer of the correct type for internal use with GEMINI, e.g. \texttt{x=>set\_gridpointer\_dyntype(xC,2)} would take the C address a dipole grid and convert it into a class pointer with the dynamic type of \texttt{dipolemesh}.  
+
 
 \subsection{Inputdata Objects}
 
-Framework for handling general input data from different models; file I/O and interpolation in space and time from a clean interface, minimal duplication (TA 1.2.4, 1.3.1).
+GEMINI has supported the use of a wide variety of input data to specify, e.g., electron precipitation and field-aligned current inputs for auroral simulation, background convection electric field inputs for instability simulations, neutral atmospheric information from a variety of MAGIC grid configurations.  For convenience these are interpolated in space and time from some user-specified input time/space grid to GEMINI's native grid and time basis.  Obviously each type of input data must be handled a bit differently; yet they all require sorting, interpolation, and time stepping -- thus it convenient and efficient to define a top-level inputdata class and then make extensions for each type of data that contain more specific functionality.  This alleviates code duplication and provides a relatively easy way for a programmer to accommodate user-specified inputs for any number of variables used internally in the model.  
+
+Details of inputdata objects can be found in \texttt{./src/inputdata/} in the \texttt{gemini3d} repository; a number of these accommodate passing of neutral data from files or through memory from an interleaved, complementary MAGIC-forest simulation.  
 
 
 \subsection{Output Data Formats and Files}
@@ -121,13 +178,12 @@ Framework for handling general input data from different models; file I/O and in
 \emph{MH - h5fortran and output information}
 
 
+
 \section{GEMINI Umbrella Library:  \texttt{libgemini}}
 
-To allow maximum flexibility in how GEMINI functionality is used, we have developed a library containing core functionality that is accessible from applications written in fortran, C, and C++ languages.  Traditionally GEMINI had been a monolithic main program with calls to procedures from various modules and submodules in order to access numerical functions.  In contrast the code now is separated into \texttt{libgemini} which contains all the basic functionality needed to write a GEMINI application, and separate apps which are limited to calls to \texttt{libgemini}.  This model allows integration into forestclaw.  Furthermore mpi components have been fully separated from numerical procedures so that they are swappable with mesh management libraries.  
+To allow maximum flexibility in how GEMINI functionality is used, we have developed a library containing core functionality that is accessible from applications written in fortran, C, and C++ languages.  Traditionally GEMINI had been a monolithic main program with calls to procedures from various modules and submodules in order to access numerical functions.  In contrast the code now is separated into \texttt{libgemini} which contains all the basic functionality needed to write a GEMINI application, and separate apps which are limited to calls to \texttt{libgemini}.  This model allows integration into forestclaw.  Furthermore mpi components have been fully separated from numerical procedures so that they are swappable with mesh management libraries.  While this may seem like a rather mundane change, it required an extensive code refactor and is necessary to improve maintainability, verifiability, and improve the ease-of-use of the model.  
 
-\emph{MZ - Modularization of app-level implementation from numerical operations}
-
-\emph{MZ - Isolation of grid and solution data; toward allowing multiple patches on a single worker}.  There is a need in some applications for GEMINI to accommodate multiple independent sub-domains (with attendant grid and solution data) on a single mpi worker.  This precludes use of any module-scope variables as these are limited to one per worker and required a full code refactor so that grid and solution data are always passed to numerical routines as procedure arguments (and not thru common blocks or module-scope variables).  
+There is a need in some applications for GEMINI to accommodate multiple independent sub-domains (with attendant grid and solution data) on a single mpi worker.  This precludes use of any module-scope variables as these are limited to one per worker and required a full code refactor so that grid and solution data are always passed to numerical routines as procedure arguments (and not thru common blocks or module-scope variables).  
 
 \subsection{C-fortran Interoperability}
 
@@ -189,14 +245,15 @@ A more comlpete description of each of these tests is given in the README file i
 
 
 
-\section{Comparisons Against GNSS Data}
+\section{Examples and Comparisons Against GNSS Data}
+
+\emph{PI - can you add some of the most recent comparisons you've done during this project?}
 
 
 
 \pagebreak
 \setcounter{page}{1}
 
-%\bibliography{./ref.bib}
 \bibliography{../formulation/GEMINI.bib}
 
 \end{document}
