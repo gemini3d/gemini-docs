@@ -46,10 +46,9 @@ Perpendicular components of the plasma momentum equations in GEMINI are resolved
 
 The use of a quasi-static solution notably omits Alfv\'en waves; however, many mesoscale structures are well-described as static \citep[e.g.][]{Lynch:2015}.  Recent reviews suggest that alternating current (AC) Poynting flux is typically reported at lower levels than direct current (DC) Poynting flux, but can be highly variable; the relative importance of these two sources (DC vs. AC) is unknown \citep{Kaeppler:2022}.  Our modeling focuses on the DC input effects (and particle inputs) as we argue this is the only part of the Poynting flux that can feasibly be captured by non-idealized models -- resolving propagation of Alfv\'en waves in a cross-scale (meso-to-large), 3D ionosphere-thermosphere (plasma-neutral coupling) model is computationally infeasible for resolutions and grid extents that we target.   At the very minimum, research suggests that the DC part of the incoming energy and momentum (stress) is a major (perhaps even the largest) contributor and our data-driven methodology permits us to evaluate the extent to which the observations are DC.  As better computational resources and algorithms become available in the future it should be possible to begin to address AC portions of the spectrum, but that is not within the project scope.  
 
-%% MZ - cut to save space
 GEMINI presently assumes that the geomagnetic field lines are equipotentials (a particularly good assumption for highly conducting situations likely to accompany precipitation) and employs a field line integration in the equation solved to describe conservation of charge \citep[cf.][Equation 1]{Zettergren:2015}.  Newer versions of GEMINI also include additional current terms needed for high-resolution modeling, like diamagnetic currents and diffusive transport perpendicular to $\mathbf{B}$. 
 
-
+A comprehensive set of documentation describing the mathematical formulation of the model and some details of numerical solutions is not included here for brevity, but may be found in the \href{https://github.com/gemini3d/gemini-docs}{gemini-docs} repository, specifically at \url{https://github.com/gemini3d/gemini-docs/blob/main/formulation/GEMINI.pdf}.  
 
 \section{GEMINI Model Heritage}
 
@@ -78,7 +77,9 @@ The use of GEMINI for scientific applications is documented in a number of studi
   \item \bibentry{Burleigh:2022}  
 \end{itemize}
 
-These studies encapsulate a wide range of applications of the model from equatorial to low/mid-latitude and high-latitude and a number of studies where the model output has been critically compared against available data in validation exercises.  Additional validation tests not yet published are included in later sections of this document.  GEMINI's technology readiness level (TRL) is  suggested to be TRL6.  
+These studies encapsulate a wide range of applications of the model from equatorial to low/mid-latitude and high-latitude and a number of studies where the model output has been critically compared against available data in validation exercises.  Additional validation tests not yet published are included in other sections of this document.  
+
+Due to the amount of testing, verification, and validation done as part of the GEMINI's development, the technology readiness level (TRL) of the model is suggested to be TRL6.  
 
 
 
@@ -101,7 +102,7 @@ A complete list of gemini repositories and their basic purposes follow (see repo
 
 \section{Internal Organization of GEMINI}
 
-Figure \ref{fig:org} shows a top level diagram of GEMINI inputs and coupling with other AIRWaveS models, specifically for the situation where model data are passed through files -- recent advances have made it possible to pass information from MAGIC into GEMINI through memory using the forestclaw mesh management software; however, GEMINI still retains the ability to do coupling through file i/o, which while slower is simpler to use.  
+Figure \ref{fig:org} shows a top level diagram of GEMINI inputs and coupling with other AIRWaveS models, specifically for the situation where model data are passed through files -- recent advances have made it possible to pass information from MAGIC into GEMINI through memory using the forestclaw mesh management software; however, GEMINI still retains the ability to do coupling through file input/output, which while slower is simpler to use and does not require AMR-related libraries.  
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{./figures/GEMINI_org-crop.pdf}
@@ -139,9 +140,9 @@ There is also the potential that AIRWaveS and future related activities may need
 Fortran objects and derived types (including polymorphic variables) are passed/returned to C calling programs as \texttt{void*} pointers, i.e. as type \texttt{void**}.  When the C calling program runs libgemini, the void* pointer is converted into the correct dynamically typed fortran object through a call which check user supplied object (e.g. grid) type information.  There are some fortran language subtleties to how this is done since the C-to-fortran pointer conversion procedure \texttt{c\_f\_pointer} will only work with fortran objects that are statically typed (and not polymorphic).  However, the grid object is handled as a polymorphic variable by most procedures to avoid having to write separate functions for different types of grid objects.  We work around this in GEMINI by using a function (\texttt{set\_gridpointer\_dyntype}) that included local statically typed pointers to every possible grid type.  These \emph{can} be used with \texttt{c\_f\_pointer} and then subsequently bound to a pointer to a polymorphic grid type.  This rather subtle workaround is implementation is shown below as it is central to and crucial for the encapsulation of GEMINI within forestclaw.  
 
 \begin{verbatim}
-  !> set fortran object pointer dynamic type to what is indicated in objtype.  
-  !>   Convert C pointer using declared static types (c_f_pointer will not work on 
-  !>    a polymorphic object).
+  !> set fortran object pointer dynamic type to what is indicated in variable 
+  !>   xtype.  Convert C pointer using declared static types (c_f_pointer will 
+  !>   not work on a polymorphic object).
   function set_gridpointer_dyntype(xtype,xC) result(x)
     type(c_ptr), intent(in) :: xC
     integer(C_INT), intent(in) :: xtype
@@ -192,7 +193,7 @@ Core GEMINI numerical functions are written in fortran 2008, while forestclaw us
 Because many of the forestclaw routines need to be run on individual patch data, GEMINI must be able to accept mesh, solution, and internal variable data for a given patch into model computational routines while also returning opaque ``handles'' to these object to the calling C program for passage into further processing routines.  Complex internal variables (e.g. fortran structures and objects) are passed from forestclaw into GEMINI via \texttt{void} pointers, which since fortran passes data by default by reference, becomes \texttt{void**} data types when used from C/C++.  An additional complication arises because the datatypes used in GEMINI are polymorphic, e.g. meshes can be of the Cartesian or dipole types, both of which inherit properties and methods from a general curvilinear mesh object.  To accommodate this arguments to numerical routines must include grid type information in a primitive format (e.g. integer flag), which can be used by \texttt{libgemini} to ``typecast'' the \texttt{void**} datatype into a class pointer of the correct type for use internally (see source code for more details).  
 
 
-\section{The \texttt{trees-GEMINI} Application} \label{sec:tG}
+\section{\texttt{trees-GEMINI} Application} \label{sec:tG}
 
 A GEMINI application has been implemented under the forestclaw API in order to allow adaptive mesh refinement (AMR) using forestclaw's three-dimensional, extruded mesh capabilities.  EMINI applications using ForestClaw / p4est AMR, termed Trees-GEMINI, have recently been developed as part of Phase 1 of DARPA's AtmoSense program.  Our current setup uses GEMINI with an ``extruded'' mesh, whereby the AMR is done in two dimensions while the full extent of the third dimension is held on each computational ``patch'' (see Figure \ref{fig:parallel}).  In Trees-GEMINI the extruded dimension is along geomagnetic field line which allows us to use existing implicit solvers for the numerically stiff electron thermal conduction process.  Such solvers require all data along the parallel coordinate at once to function but are capable of dealing with the fast thermal conduction time scales (in the electron population) while maintaining an otherwise reasonable time step for other explicit solutions for transport.  Figure \ref{fig:parallel} shows a diagram illustrating logical arrangements of coordinates and subdomains organized by mpi worker and patch number.  
 \begin{figure}
@@ -202,9 +203,9 @@ A GEMINI application has been implemented under the forestclaw API in order to a
   \label{fig:parallel}
 \end{figure}
 
-Figure \ref{fig:Trees-GEMINI} shows a Trees-GEMINI simulation using multiply refined regions to model low-frequency acoustic wave propagation through the ionosphere using input from the MAGIC atmospheric dynamics model.  
-
 Trees-GEMINI currently contains most of the functionality of the core libGEMINI libraries including input data handling, dipole and Cartesian meshes, specifications of boundary conditions, fluid plasma solvers (chemistry, advection, diffusion), photoionization and impact ionization solvers, along with new output routines to optionally generate \texttt{vtk/vtu} files for efficient 3D visualization via the Paraview multi-platform open source application (Figure \ref{fig:Trees-GEMINI} shows an example).  It currently does not have a AMR-capable (quasi-static) potential solution in the manner of the core GEMINI library as this functionality was not required by the projects that funded development of Trees-GEMINI.  While the MAGIC data are historically input via files, a strategy for running the models side-by-side and exchanging data (one-way) thru memory is currently in development and testing as part of AtmoSense in a form that can, next, be reciprocated from GEMINI to MAGIC.  %Two-way GEMINI-MAGIC communication is not part of any currently funded project and will be needed for the proposed studies.  
+
+Figure \ref{fig:Trees-GEMINI} shows a Trees-GEMINI simulation using multiply refined regions to model low-frequency acoustic wave propagation through the ionosphere using input from the MAGIC atmospheric dynamics model.  
 \begin{figure}
   \includegraphics[width=\textwidth]{./figures/allGEMINI-crop.pdf}
   \caption{Trees-GEMINI simulation of mHz acoustic waves (AWs) propagating through the ionosphere using input data from MAGIC.  (a,b) The overall grid and refinement structures used in the simulation, (c) the configuration of plasma flow, (d) individual output frame illustrating how AW forces ion flows in the F-region and topside.}
@@ -212,10 +213,22 @@ Trees-GEMINI currently contains most of the functionality of the core libGEMINI 
 \end{figure}
 
 
+\subsection{Use of \texttt{trees-GEMINI} within the \texttt{FIGMENTS} framework}
+
+Trees-GEMINI has been integrated with the FIGMENTS framework which uses p4est and forestclaw functions to search for overlap between two AMR meshes and to interpolate data from one mesh onto another for purposes of model coupling.  The advantage of this approach over the traditional file-based data exchange (Figure \ref{fig:org}) is that that data exchange is done in memory and during execution of both models.  As such this approach is must more efficient that the traditional interfaces and moreover allows AMR data exchange not possible in prior implementations.  
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{./figures/figments-crop.pdf}
+  \caption{Tree-GEMINI run within the FIGMENTS framework.  This simulation includes MAGIC-forest modeling of a source representative of the Mistry Picture Experiment which is then conveyed via forestclaw memory searches to trees-GEMINI.  Show in the diagrams are the mesh refinement in GEMINI (top) along the field-aligned component of the plasma drift velocity when forced by the shock wave.}
+  \label{fig:FIGMENTS}
+\end{figure}
+
+Figure \ref{fig:FIGMENTS} shows an example of trees-GEMINI and MAGIC-forest coupled through the FIGMENTS framework.  This example uses the Misty Picture source in MAGIC-forest and the results plots show how the shock wave manifests in plasma drifts in the trees-GEMINI model.  
+
 
 \section{Postprocessing and Visualization Scripts}
 
-
+\emph{MH - can you fill in this section explain basic function of pygemini and mat\_gemini?}
 
 
 \section{Continuous Integration (CI)}
@@ -226,7 +239,7 @@ The base \texttt{gemini3d} repository includes a set of integration and unit tes
 
 \emph{MH:  cmake implementation details, locations of reference data, details of github actions and examples, descriptions of tests}
 
-\emph{example plots of output?}
+\emph{MH - example plots of output?}
 
 \subsection{Comprehensive Continuous Integration (long CI)}
 
@@ -241,13 +254,13 @@ A more comlpete description of each of these tests is given in the README file i
 
 \emph{MH:  cmake implementation details, locations of ref. data}
 
-\emph{example plots of output?}
+\emph{MH - example plots of output?}
 
 
 
 \section{Examples and Comparisons Against GNSS Data}
 
-\emph{PI - can you add some of the most recent comparisons you've done during this project?}
+\emph{PI - add some of the most recent comparisons you've done during this project?  Or a reference to your section of the report?}
 
 
 
