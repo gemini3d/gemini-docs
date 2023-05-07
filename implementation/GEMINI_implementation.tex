@@ -109,11 +109,34 @@ Figure \ref{fig:org} shows a top level diagram of GEMINI inputs and coupling wit
   \caption{GEMINI file-based interfaces and postprocessing.} \label{fig:org}
 \end{figure}
 
-\emph{MZ - top level GEMINI module organization}
+The main GEMINI model inputs that need to be provided (through files) are:
+\begin{itemize}
+  \item Source terms for generating perturbations in the MAGIC model 
+  \item Solar fluxes for describing dayside photoionization processes (where relevant)
+  \item An initial ionospheric state; this is often generated through an ``equilibrium'' simulation where the model is run for a full day or longer with only solar forcing.  
+  \item Boundary conditions for electromagnetic solutions (background electric fields, boundary pottentials and/or field-aligned currents)
+  \item Kinetic boundary conditions for specifying high-latitude electron precipitation inputs (as needed)
+  \item Reference atmospheres (usually from empirical models)
+  \item Atmospheric perturbations from external models (e.g. MAGIC), as required
+\end{itemize}
+GEMINI provides 3D and time-dependent plasma output parameters including density, drift, and temperature of the 7 main ion species resolved along with electric field and current densities.  Additionally information about magnetic field perturbations and optical intensities (in the case of chemically reactive species) can be computed from the output.  The plasma density fluctuations computed in the model can further be used as input to the SIGMA radio propagation model in order to better-diagnose scintillation and refractive/diffractive effects.  
 
-\emph{MZ - example lower-level organization}
+Core GEMINI model components are implemented in fortran 2008, which interfaces provides for use with C/C++ applications.  Fortran code is organized, from the top-level organizational perspective into modules which encapsulate key numerical functionality.  These are called from the top level \texttt{libgemini} module which provides public interfaces to functionality needed to execute an ionospheric simulation.  
+\begin{figure}
+  \includegraphics[width=\textwidth]{./figures/modules-crop.pdf}
+  \caption{Limited illustration of some of the modules comprising libgemini and the GEMINI ionospheric model.}
+  \label{fig:module}
+\end{figure}
 
-\emph{MZ - example external libraries}
+A complete module listing with all dependencies is almost impossible to represent via a diagram (such information can be obtained from the cmake build files); instead here we illustrate a small subset of these module connexions to illustrate the overall logic to how the modules are organized.  Figure \ref{fig:module} shows the basic flow of the top level programs starting with time step selection and moving through gathering of neutral input data, then solution of electromagnetic equations, plasma transport, and then file output steps.  Some of the module dependencies are shown for electromagnetic and multifluid modules specifically in addition to utility modules required by many (if not most) other modules, e.g. interpolation, grid, and basic calculus operations).  
+
+A detailed description of the neutral module is shown in Figure \ref{fig:neutral} to show the complex internal dependencies of just this single program unit.  This diagram is effectively one layer of abstraction below that shown in Figure \ref{fig:module}.  The neutral modules contains submodules for computing density and temperature (atmos) along with winds (wind) and doing various rotations and transformations to map geographic quantities into geomagnetic.  Likewise there are a number of dependencies on utility routines that provide interpolation, etc., along with external connections needed for message passing communication.  
+\begin{figure}
+  \includegraphics[width=\textwidth]{./figures/neutral-crop.pdf}
+  \caption{Diagram for neutral module in GEMINI along with associated submodules and dependencies.}
+  \label{fig:neutral}
+\end{figure}
+
 
 
 \section{Cmake Build System for GEMINI}
@@ -164,7 +187,11 @@ Fortran objects and derived types (including polymorphic variables) are passed/r
   end function set_gridpointer_dyntype
 \end{verbatim}
 
-This function can be called to convert the C pointer to the fortran object (and a given type) into a class (polymorphic) pointer of the correct type for internal use with GEMINI, e.g. \texttt{x=>set\_gridpointer\_dyntype(xC,2)} would take the C address a dipole grid and convert it into a class pointer with the dynamic type of \texttt{dipolemesh}.  
+This function can be called to convert the C pointer to the fortran object (and a given type) into a class (polymorphic) pointer of the correct type for internal use with GEMINI, e.g.:
+\begin{verbatim}
+x=>set\_gridpointer\_dyntype(xC,2)
+ \end{verbatim}
+ would take the C address a dipole grid and convert it into a class pointer with the dynamic type of \texttt{dipolemesh}.  
 
 
 \subsection{Inputdata Objects}
