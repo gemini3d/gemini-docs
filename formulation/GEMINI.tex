@@ -684,7 +684,7 @@ The covariant basis vectors (not used immediately) are defined by:
 \begin{equation}
 \boldsymbol{\varepsilon}_i = \frac{\partial x}{\partial x^i} \hat{\mathbf{e}}_x + \frac{\partial y}{\partial x^i} \hat{\mathbf{e}}_y + \frac{\partial z}{\partial x^i} \hat{\mathbf{e}}_z \label{eqn:covbasis}
 \end{equation}
-The necessary derivative for computing the contravariant basis vectors can be computed from the dipole coordinates as functions of the cartesian coordinates $x,y,z$ (listed above) and giving:  
+The necessary derivatives for computing the contravariant basis vectors can be computed from the dipole coordinates as functions of the cartesian coordinates $x,y,z$ (listed above) and giving:  
 \begin{eqnarray}
 \frac{\partial x^1}{\partial x} &=& \frac{\partial q}{\partial x} = \frac{-3 R_e \sin \theta \cos \theta \cos \phi}{r^3} \\
 \frac{\partial x^1}{\partial y} &=& \frac{\partial q}{\partial y} = \frac{-3 R_e \sin \theta \cos \theta \sin \phi}{r^3} \\
@@ -1189,7 +1189,11 @@ T^{n+1/2}_{i-1} a_i + T^{n+1}_i \left( \frac{1}{\Delta t/3} + b_i \right) + T^{n
 
 \subsubsection{Boundary Conditions for Diffusion Equations}
 
-The boundary conditions for solution of temperatures are taken to be $T_s=T_n$ at the bottom of the grid (i.e. the lowest altitude) and $T_s=T_\infty$ at the highest altitude (where $T_\infty$ is specified in the input file for the run).  Another reasonable approach would be to use Neumann boundary conditions at the top of the model, i.e. specify a temperature gradient (heat flux) at the top boundary. 
+The boundary conditions for solution of temperatures are taken to be $T_s=T_n$ at the bottom of the grid (i.e. the lowest altitude) and $T_s=T_\infty$ at the highest altitude (where $T_\infty$ is specified in the input file for the run).  GEMINI also supports the use of Neumann boundary conditions to specify heat fluxes at the top of the model; these can be invoked by choosing a value for $T_\infty<1$, which causes the code to interpret the quantity stored in this variable as a heat flux.  For the ions the heat flux is always assumed to be zero (due to comparatively low thermal conductivity), while for electrons the user-specified heat flux is applied.  Internally the model converts heat flux into a temperature difference:
+\begin{equation}
+  T_i^n - T_{i-1}^n = - \frac{[h_e]_i^n}{[\lambda_e]_i} [h_1]_i [\Delta x_1]_{i,b}
+\end{equation}
+This temperature difference is then passed into the numerical solver.
 
 
 \subsection{Solution for Stiff Source and Sink Terms} \label{sec:numstiffsource}
