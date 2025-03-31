@@ -121,7 +121,7 @@ We have generally adopted an approach of favoring top-level clarity and organiza
 
 \subsection{GEMINI Mesh Geometries and Management}
 
-GEMINI can run with either a 2D or 3D orthogonal, curvilinear grid.  The 2D functionality is included to facilitate very high-resolution runs in two dimensions, which become overly burdensome in GEMINI's parent MATLAB code.  Special cases in the mathematical formulation and numerical implementation arising when using a 2D grid are discussed in detail in Section \ref{sec:2D} of this document.  
+GEMINI can run with either a 2D or 3D orthogonal, curvilinear grid.  The 2D functionality is included to facilitate very high-resolution runs in two dimensions, which become overly burdensome in GEMINI's parent MATLAB code.  Special cases in the mathematical formulation and numerical implementation arising when using a 2D grid are discussed in detail various sections of this document.  
 
 Parallelization is critical for efficient 2D and 3D ionospheric simulation at high resolution.  GEMINI uses a parallel domain-decomposition approach which is implemented through message passing interface (MPI) protocols via MPICH or OPENMPI libraries.  Most GEMINI functions are, thus, intended to run on self-contained ``patches'' of data including mesh information, ionospheric state parameters, and input data for a small, contiguous piece of the overall grid.  Solutions on these patches are then conducted in parallel with data exchange along the boundaries (with some exceptions that requires some global information about the domain or plasma state).  The relatively independence of this patches then means that the overlying mesh management can be as simple as concatenating a bunch of identical resolution domains into a regular grid, or as complicated as block adaptive mesh refinement -- the core numerical implementations are largely agnostic to top-level mesh management.  
 
@@ -135,7 +135,7 @@ GEMINI is an evolution of the model first used in \citet{Zettergren:2012} to stu
 
 \subsection{GEMINI Publications}
 
-The use of GEMINI for scientific applications is documented in a number of studies and associated refereed journal articles (21 by our count):  
+The use of GEMINI for scientific applications is documented in a number of studies and associated refereed journal articles (29 by our count):  
 \begin{itemize}
   \item \bibentry{Zettergren:2012}
   \item \bibentry{Zettergren:2013}
@@ -158,6 +158,14 @@ The use of GEMINI for scientific applications is documented in a number of studi
   \item \bibentry{Clayton:2021} 
   \item \bibentry{Lamarche:2022} 
   \item \bibentry{Burleigh:2022}  
+  \item \bibentry{Lynch:2022}  
+  \item \bibentry{Diaz:2024}  
+  \item \bibentry{Vaggu:2024}
+  \item \bibentry{Reistad:2024}
+  \item \bibentry{VanIrsel:2024}
+  \item \bibentry{Inchin:2024}
+  \item \bibentry{Huyghebaert:2025}
+  \item \bibentry{Kvammen:2025}  
 \end{itemize}
 
 
@@ -1559,9 +1567,9 @@ cheers,\\
 
 Developing a comprehensive model from scratch is a daunting and stressful (but also fun!) task; one at which I would not have succeeded without invaluable experience working with highly qualified modeling teams, specifically Pierre-Louis Blelly's team at CNRS in Toulouse, France.  I've also received an enormous amount of good career advice from my PhD advisor Joshua Semeter (Boston University) and from my colleague Kristina Lynch (Dartmouth College).  I have also my family to thank for being so very patient with me during the many weekend days and late nights that I've spent working on GEMINI.  
 
-The \emph{development} of GEMINI has been supported by the DARPA (AtmoSense Program Cooperative Agreement HR00112120003), the National Science Foundation (grants AGS-1000302 and AGS-1339537, and NSF CAREER award AGS-1255181), and NASA (grant 80NSSC21K1354).  Many more grants have contributed to science applications of the models as listed in various GEMINI papers cited herein.  
+The \emph{development} of GEMINI has been supported by the DARPA (AtmoSense Program Cooperative Agreements HR00112120003 and HR00112320043), the National Science Foundation (grants AGS-1000302 and AGS-1339537, and NSF CAREER award AGS-1255181), and NASA (grants 80NSSC21K1354 and 80NSSC24K0126).  Many more grants have contributed to science applications of the models as listed in various GEMINI papers cited herein.  
 
-Major contributors to GEMINI source code and testing include:  M. Hirsch, G. Grubbs, M. Burleigh, and many others (as recorded in the revision history on GitHub).
+Major contributors to GEMINI source code and testing include:  M. Hirsch, G. Grubbs, M. Burleigh, and many others (the revision history on GitHub will contain the fullest account of contributions).
 
 
 \pagebreak
